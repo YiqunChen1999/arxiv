@@ -4,6 +4,7 @@ import logging
 import argparse
 import datetime
 import os.path as osp
+from functools import partial
 
 import arxiv
 
@@ -16,17 +17,19 @@ def main():
     args = read_args()
     out_dir = args.output_directory
     setup_logger(out_dir)
+    logger.info(f'Arguments: {args}')
 
-    client = arxiv.Client()
-    logger.info(f'Fetching arxiv papers meta information by '
-                f'query: {format_query(args.categories)}, '
-                f'max results: {args.max_results}.')
-    search = arxiv.Search(
-      query=format_query(args.categories),
-      max_results=args.max_results,
-      sort_by=arxiv.SortCriterion.SubmittedDate,
-    )
-    results = list(client.results(search))
+    while True:
+        results, results_by_date = search_and_parse(args)
+        if len(results) == 0 and args.date < str(datetime.date.today()):
+            logger.info(f'Get no results of date {args.date}, '
+                        f'retry search and parse')
+        else:
+            break
+
+def search_and_parse(args):
+    out_dir = args.output_directory
+    results = search(args)
     logger.info('DONE.')
     logger.info(f'Get {len(results)} results.')
     results_by_date = filter_results_by_date(results, args.date)
@@ -39,6 +42,32 @@ def main():
         fp.writelines([format_result(r, i)
                        for i, r in enumerate(results_by_date)])
     save_by_keywords(results_by_date, args.keywords, out_dir)
+    logger.info(f'Got {len(results)} items, {len(results_by_date)} of which '
+                f'are expected. Finish processing {len(results_by_date)} '
+                f'papers of date {args.date} '
+                f'with categories {args.categories}.')
+    return results, results_by_date
+
+
+def search(args):
+    results = []
+    client = arxiv.Client()
+    logger.info(f'Fetching arxiv papers meta information by '
+                f'query: {format_query(args.categories)}, '
+                f'items per query: {args.items_per_query}.')
+    flag = True
+    offset = 0
+    Search = partial(arxiv.Search,
+                     query=format_query(args.categories),
+                     sort_by=arxiv.SortCriterion.SubmittedDate)
+    while flag:
+        search = Search(max_results=offset+args.items_per_query)
+        candidates = list(client.results(search, offset=offset))
+        dates = [str(c.published) for c in candidates]
+        flag = any([d >= args.date for d in dates])
+        offset += args.items_per_query
+        results += candidates
+    return results
 
 
 def filter_results_by_date(results: list[arxiv.Result],
@@ -145,9 +174,9 @@ def setup_logger(output_directory: str = None):
 def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--max_results',
+        '--items_per_query',
         type=int,
-        default=1000,
+        default=100,
         required=False,
         help='Number of max results returned by arxiv API.',
     )
