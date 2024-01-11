@@ -50,8 +50,8 @@ def search_and_parse(args):
 
 
 def search(args):
-    results = []
-    client = arxiv.Client()
+    results: list[arxiv.Result] = []
+    client = arxiv.Client(num_retries=args.num_retries)
     logger.info(f'Fetching arxiv papers meta information by '
                 f'query: {format_query(args.categories)}, '
                 f'items per query: {args.items_per_query}.')
@@ -62,11 +62,23 @@ def search(args):
                      sort_by=arxiv.SortCriterion.SubmittedDate)
     while flag:
         search = Search(max_results=offset+args.items_per_query)
-        candidates = list(client.results(search, offset=offset))
+        for _ in range(args.num_retries):
+            candidates = list(client.results(search, offset=offset))
+            if len(candidates) > 0:
+                break
+            search = Search(max_results=offset+args.items_per_query)
+        else:
+            logger.warn(f'Still got no candidates of date {args.date}.')
+        if len(candidates):
+            logger.debug(f'Date of the first item: {candidates[0].published}. '
+                         f'Date of the last item: {candidates[-1].published}')
         dates = [str(c.published) for c in candidates]
         flag = any([d >= args.date for d in dates])
         offset += args.items_per_query
         results += candidates
+    if len(results):
+        logger.debug(f'Date of the first item: {results[0].published}. '
+                     f'Date of the last item: {results[-1].published}')
     return results
 
 
@@ -185,6 +197,12 @@ def read_args():
         nargs='+',
         type=str,
         default=['cs.CV', 'cs.AI', 'cs.LG'],
+    )
+    parser.add_argument(
+        '--num_retries',
+        type=int,
+        default=10,
+        help='Number of retries before raise Exception.'
     )
     parser.add_argument(
         '--keywords',
