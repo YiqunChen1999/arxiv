@@ -67,7 +67,7 @@ def search_and_parse(cfgs: Configs):
     results = search(cfgs)
 
     path = osp.join(cfgs.output_directory, "papers.txt")
-    logger.info(f'Writting results to {path}')
+    logger.info(f'Saving {len(results)} results to {path}')
     with open(path, 'w') as fp:
         fp.writelines([format_result(r, i)
                        for i, r in enumerate(results)])
@@ -100,8 +100,9 @@ def save_by_keyword(results: list[arxiv.Result],
         filter(lambda r: keyword in r.summary or keyword in r.title,
                results)
     )
-    logger.info(f'Saving results by keyword {keyword}')
-    with open(f'{output_directory}/keyword-{keyword}.txt', 'w') as fp:
+    path = osp.join(output_directory, f'keyword-{keyword}.txt')
+    logger.info(f'[{keyword}]: Saving {len(results)} results to {path}')
+    with open(path, 'w') as fp:
         fp.writelines([format_result(r, i) for i, r in enumerate(results)])
     logger.info('DONE.')
 

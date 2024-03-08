@@ -33,7 +33,7 @@ def setup_logger(output_directory: str = None):
     kwargs = dict(
         format=LOGGER_FORMAT,
         datefmt='%m/%d/%Y %H:%M:%S',
-        level=logging.DEBUG,
+        level=logging.INFO,
     )
     if output_directory is not None:
         log_dir = osp.join(output_directory, 'logs')
