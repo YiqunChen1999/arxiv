@@ -10,6 +10,7 @@ import arxiv
 
 from parsing import ArgumentParser
 from logger import setup_logger
+from markdown import make_markdown_table
 
 
 logger = logging.getLogger(__name__)
@@ -34,13 +35,18 @@ DOCUMENTS = dict(
 )
 
 
+TABLE_HEADERS = (
+    'title', 'primary category', 'paper abstract link', 'paper pdf link'
+)
+
+
 @dataclass
 class Configs:
     categories: str = field(default="cat:cs.CV OR cat:cs.AI OR cat:cs.LG",
                             metadata={"help": DOCUMENTS["categories"]})
     num_retries: int = 10
     keywords: str = field(
-        default="detect|diffuse|diffusion|segment|segmentation",
+        default="detect|diffusion|segment",
         metadata={"help": DOCUMENTS["keywords"]})
     datetime: str = field(default=None,
                           metadata={"help": DOCUMENTS["datetime"]})
@@ -66,7 +72,9 @@ def main():
 
 def search_and_parse(cfgs: Configs):
     results = search(cfgs)
-    save_results_to_jsonl(results, cfgs.output_directory)
+    jsonl = convert_results_to_dict(results)
+    save_results_to_jsonl(jsonl, cfgs.output_directory)
+    save_markdown_table(jsonl, cfgs.output_directory, TABLE_HEADERS)
 
     path = osp.join(cfgs.output_directory, "papers.txt")
     logger.info(f'Saving {len(results)} results to {path}')
@@ -74,6 +82,22 @@ def search_and_parse(cfgs: Configs):
         fp.writelines([format_result(r, i)
                        for i, r in enumerate(results)])
     save_by_keywords(results, cfgs.keyword_list, cfgs.output_directory)
+
+
+def save_markdown_table(results: list[dict],
+                        output_directory: str,
+                        headers: list[str] = None,
+                        suffix: str = ""):
+    headers = headers or list(results[0].keys())
+    makrdown = make_markdown_table(results, headers)
+    suffix = "" if suffix == "" else f"-{suffix}"
+    path = osp.join(output_directory, f"papers{suffix}.md")
+    logger.info(f'Saving markdown table to {path}')
+    with open(path, 'w') as fp:
+        fp.write('\n' + '# Paper List\n\n')
+        fp.write(makrdown)
+        fp.write('\n\n')
+    return path
 
 
 def search(cfgs: Configs):
@@ -88,30 +112,30 @@ def search(cfgs: Configs):
     return results
 
 
-def save_results_to_jsonl(results: list[arxiv.Result], output_directory: str):
-    jsonl = []
-    for result in results:
-        authors = [au.name for au in result.authors]
-        authors = ', '.join(authors)
-        jsonl.append({
-            'title': result.title,
-            'publish date': result.published.strftime("%Y-%m-%d, %H:%M:%S"),
-            'updated date': result.updated.strftime("%Y-%m-%d, %H:%M:%S"),
-            'authors': authors,
-            'primary category': result.primary_category,
-            'categories': result.categories,
-            'journal reference': result.journal_ref,
-            'paper pdf link': result.pdf_url,
-            'paper abstract link': result.entry_id,
-            'doi': result.doi,
-            'abstract': result.summary,
-        })
+def save_results_to_jsonl(results: list[dict], output_directory: str):
     path = osp.join(output_directory, 'results.jsonl')
     logger.info(f"Saving results to {path}")
     with open(path, 'w') as fp:
-        for it in jsonl:
+        for it in results:
             json.dump(it, fp)
             fp.write('\n')
+    return path
+
+
+def convert_results_to_dict(results: list[arxiv.Result]) -> list[dict]:
+    return [{
+        'title': result.title,
+        'publish date': result.published.strftime("%Y-%m-%d, %H:%M:%S"),
+        'updated date': result.updated.strftime("%Y-%m-%d, %H:%M:%S"),
+        'authors': ', '.join([au.name for au in result.authors]),
+        'primary category': result.primary_category,
+        'categories': result.categories,
+        'journal reference': result.journal_ref,
+        'paper pdf link': result.pdf_url,
+        'paper abstract link': result.entry_id,
+        'doi': result.doi,
+        'abstract': result.summary,
+    } for result in results]
 
 
 def save_by_keywords(results: list[arxiv.Result],
@@ -125,9 +149,14 @@ def save_by_keyword(results: list[arxiv.Result],
                     keyword: str,
                     output_directory: str):
     results = list(
-        filter(lambda r: keyword in r.summary or keyword in r.title,
+        filter(lambda r: (keyword in r.summary.lower()
+                          or keyword in r.title.lower()),
                results)
     )
+    jsonl = convert_results_to_dict(results)
+    save_markdown_table(jsonl, output_directory,
+                        headers=TABLE_HEADERS,
+                        suffix=keyword)
     path = osp.join(output_directory, f'keyword-{keyword}.txt')
     logger.info(f'[{keyword}]: Saving {len(results)} results to {path}')
     with open(path, 'w') as fp:
