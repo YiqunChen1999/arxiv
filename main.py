@@ -1,4 +1,5 @@
 
+import json
 import os
 import logging
 import datetime
@@ -65,6 +66,7 @@ def main():
 
 def search_and_parse(cfgs: Configs):
     results = search(cfgs)
+    save_results_to_jsonl(results, cfgs.output_directory)
 
     path = osp.join(cfgs.output_directory, "papers.txt")
     logger.info(f'Saving {len(results)} results to {path}')
@@ -84,6 +86,32 @@ def search(cfgs: Configs):
     if len(results):
         logger.info(f"Range: {results[-1].updated} {results[0].updated}")
     return results
+
+
+def save_results_to_jsonl(results: list[arxiv.Result], output_directory: str):
+    jsonl = []
+    for result in results:
+        authors = [au.name for au in result.authors]
+        authors = ', '.join(authors)
+        jsonl.append({
+            'title': result.title,
+            'publish date': result.published.strftime("%Y-%m-%d, %H:%M:%S"),
+            'updated date': result.updated.strftime("%Y-%m-%d, %H:%M:%S"),
+            'authors': authors,
+            'primary category': result.primary_category,
+            'categories': result.categories,
+            'journal reference': result.journal_ref,
+            'paper pdf link': result.pdf_url,
+            'paper abstract link': result.entry_id,
+            'doi': result.doi,
+            'abstract': result.summary,
+        })
+    path = osp.join(output_directory, 'results.jsonl')
+    logger.info(f"Saving results to {path}")
+    with open(path, 'w') as fp:
+        for it in jsonl:
+            json.dump(it, fp)
+            fp.write('\n')
 
 
 def save_by_keywords(results: list[arxiv.Result],
@@ -115,7 +143,7 @@ def format_result(result: arxiv.Result, index: int = None) -> str:
         f' - publish date: {result.published}\n'
         f' - updated date: {result.updated}\n'
         f' - authors: {authors}\n'
-        f' - main category: {result.primary_category}\n'
+        f' - primary category: {result.primary_category}\n'
         f' - categories: {result.categories}\n'
         f' - journal reference: {result.journal_ref}\n'
         f' - paper pdf link: {result.pdf_url}\n'
