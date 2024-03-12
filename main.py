@@ -108,11 +108,13 @@ def save_by_keyword(results: list[arxiv.Result],
 
 
 def format_result(result: arxiv.Result, index: int = None) -> str:
+    authors = [au.name for au in result.authors]
+    authors = ', '.join(authors)
     result = (
         f' - title: {result.title}\n'
         f' - publish date: {result.published}\n'
         f' - updated date: {result.updated}\n'
-        f' - authors: {result.authors}\n'
+        f' - authors: {authors}\n'
         f' - main category: {result.primary_category}\n'
         f' - categories: {result.categories}\n'
         f' - journal reference: {result.journal_ref}\n'
