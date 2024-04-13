@@ -1,0 +1,21 @@
+{
+    "categories": "(cat:cs.CV OR cat:cs.AI OR cat:cs.LG)",
+    "num_retries": 10,
+    "keywords": [
+        "detect", "diffusion", "segment",
+
+        "vision", "visual",
+        "vision-language", "vision language",
+        "multimodal", "multi-modal", "multi modal", 
+        "vlm", "mllm",
+
+        "segment&vision", "segment&visual",
+        "segment&vision-language", "segment&vision language",
+        "segment&multimodal", "segment&multi-modal", "segment&multi modal",
+        "segment&vlm", "segment&mllm"
+    ],
+    "datetime": null,
+    "output_directory": "outputs",
+    "markdown_directory": "markdown",
+    "query": null
+}

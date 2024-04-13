@@ -1,3 +1,5 @@
 outputs
+markdown
+configs.json
 .vscode
 *__pycache__*
