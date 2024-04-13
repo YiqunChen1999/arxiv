@@ -104,6 +104,13 @@ class Configs:
         os.makedirs(self.markdown_directory, exist_ok=True)
         setup_logger(self.output_directory)
 
+    def __str__(self) -> str:
+        string = "Configs:\n"
+        for key, value in self.__dict__.items():
+            string += f" >>>> {key}: {value}\n"
+        string += "That's all."
+        return string
+
 
 def main():
     cfgs = parse_cfgs()
