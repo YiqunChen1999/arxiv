@@ -165,6 +165,7 @@ def make_navigation_list(output_directory: str):
         fp.write('LIST WITHOUT ID\n')
         fp.write(f'FROM "{osp.basename(output_directory)}"\n')
         fp.write(f'WHERE !contains(file.name, "_Navigation")\n')
+        fp.write('SORT file.name\n')
         fp.write('```')
     return path
 
