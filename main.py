@@ -116,6 +116,7 @@ def search_and_parse(cfgs: Configs):
     jsonl = convert_results_to_dict(results)
     save_results_to_jsonl(jsonl, cfgs.output_directory)
     save_markdown_table(jsonl, cfgs.markdown_directory, TABLE_HEADERS)
+    make_navigation_list(cfgs.markdown_directory)
 
     path = osp.join(cfgs.output_directory, "papers.txt")
     logger.info(f'Saving {len(results)} results to {path}')
@@ -140,6 +141,24 @@ def save_markdown_table(results: list[dict],
         fp.write('\n')
         fp.write(makrdown)
         fp.write('\n\n')
+    return path
+
+
+def make_navigation_list(output_directory: str):
+    path = osp.join(output_directory, f"_Navigation.md")
+    logger.info(f"Saving navigation list to {path}")
+    osp.basename(output_directory)
+    date = osp.basename(output_directory)
+    date = date[:4] + '-' + date[4:6] + '-' + date[6:]
+    with open(path, 'w') as fp:
+        fp.write('---\n')
+        fp.write(f'date: {date}\n')
+        fp.write('---\n\n')
+        fp.write('```dataview\n')
+        fp.write('LIST WITHOUT ID\n')
+        fp.write(f'FROM "{osp.basename(output_directory)}"\n')
+        fp.write(f'WHERE !contains(file.name, "_Navigation")\n')
+        fp.write('```')
     return path
 
 
@@ -250,6 +269,14 @@ def parse_date(date: str = None):
         yesterday = today - datetime.timedelta(days=1)
         date = f"{yesterday.strftime('%Y%m%d%H%M')} TO {today.strftime('%Y%m%d%H%M')}"
     date = date.replace('-', '').replace(':', '')
+    if len(date) == 8:
+        # in case of YYYYMMDD
+        curr_date_time = (datetime.datetime
+                          .strptime(date, '%Y%m%d')
+                          .strftime('%Y%m%d%H%M'))
+        next_date_time = (datetime.datetime.strptime(date, '%Y%m%d')
+                          + datetime.timedelta(days=1)).strftime('%Y%m%d%H%M')
+        date = f"{curr_date_time} TO {next_date_time}"
     date = f"lastUpdatedDate:[{date}]"
     return date
 
