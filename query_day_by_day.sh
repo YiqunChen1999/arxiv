@@ -50,7 +50,7 @@ fi
 delta_days=$(compute_delta_days "$date1" "$date2")
 
 # Output the result
-echo "Query arxiv from $date1 (include) to $date2 (include). $delta_days days in total."
+echo "# Query arxiv from $date1 (include) to $date2 (include). $delta_days days in total."
 
 for delta in $(seq 0 $delta_days); do
     date=$(date -d "$date1 + $delta days" +%Y-%m-%d)
