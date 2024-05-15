@@ -18,6 +18,29 @@ from markdown import make_markdown_table
 logger = logging.getLogger(__name__)
 
 
+OBSIDIAN_NAVIGATION = """
+```dataviewjs
+const folder = dv.current().file.folder;
+
+const countStyleS = "<span style='display:flex; max-width: 30px; justify-content: right; '>";
+const countStyleE = "</span>";
+const linkStyleS = "<span style='display:flex; justify-content: left; '>";
+const linkStyleE = "</span>";
+
+dv.table(["Counts", "Path"], 
+    dv.pages(`"${folder}"`)
+    .where(p => !p.file.name.includes("_Navigation"))
+    .sort(p => p.file.name)
+    .map(p => [
+        countStyleS + p.counts + countStyleE, 
+        linkStyleS + p.file.link + linkStyleE
+    ])
+);
+```
+
+"""
+
+
 DOCUMENTS = dict(
     categories=("Categories of desired papers with the format `(cat:[CAT_ID])`"
                 ". For example, `(cat:cs.CV)`. "
@@ -161,20 +184,7 @@ def make_navigation_list(output_directory: str):
         fp.write('---\n')
         fp.write(f'date: {date}\n')
         fp.write('---\n\n')
-        fp.write('```dataview\n')
-        fp.write('TABLE WITHOUT ID\n')
-        fp.write('    CountStyleS + counts + CountStyleE AS Counts,\n')
-        fp.write('    LinkStyleS + file.link + LinkStyleE as Path\n')
-        fp.write(f'FROM "{osp.basename(output_directory)}"\n')
-        fp.write('WHERE !contains(file.name, "_Navigation")\n')
-        fp.write('SORT file.name\n')
-        fp.write('FLATTEN "<span style=\'display:flex; max-width: 30px; '
-                 'justify-content: right; \'>" AS CountStyleS\n')
-        fp.write('FLATTEN "</span>" AS CountStyleE\n')
-        fp.write('FLATTEN "<span style=\'display:flex; '
-                 'justify-content: left; \'>" AS LinkStyleS\n')
-        fp.write('FLATTEN "</span>" AS LinkStyleE\n')
-        fp.write('```')
+        fp.write(OBSIDIAN_NAVIGATION)
     return path
 
 
