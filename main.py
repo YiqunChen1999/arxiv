@@ -193,11 +193,14 @@ def make_navigation_list(output_directory: str):
 
 def search(cfgs: Configs):
     client = arxiv.Client(num_retries=cfgs.num_retries)
-    search = arxiv.Search(query=cfgs.query,
-                          sort_by=arxiv.SortCriterion.LastUpdatedDate,
-                          max_results=10000)
-    results = list(client.results(search))
-    logger.info(f"Get {len(results)} items.")
+    for i in range(cfgs.num_retries):
+        search = arxiv.Search(query=cfgs.query,
+                              sort_by=arxiv.SortCriterion.LastUpdatedDate,
+                              max_results=10000)
+        results = list(client.results(search))
+        logger.info(f"Get {len(results)} items.")
+        if len(results) > 0:
+            break
     if len(results):
         logger.info(f"Range: {results[-1].updated} {results[0].updated}")
     return results
