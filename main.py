@@ -161,7 +161,8 @@ def search_and_parse(cfgs: Configs):
 def save_markdown_table(results: list[dict],
                         output_directory: str,
                         headers: list[str] = None,
-                        suffix: str = ""):
+                        suffix: str = "",
+                        extra_info: str = None):
     headers = headers or list(results[0].keys())
     markdown = make_markdown_table(results, headers)
     markdown = "---\n" + f"counts: {len(results)}\n" + "---\n\n" + markdown
@@ -171,6 +172,8 @@ def save_markdown_table(results: list[dict],
     with open(path, 'w') as fp:
         fp.write(markdown)
         fp.write('\n\n')
+        if extra_info is not None:
+            fp.write(extra_info)
     return path
 
 
@@ -256,10 +259,13 @@ def save_by_keyword(results: list[arxiv.Result],
                 results
             )
         )
+    paper_infos = [format_result_markdown(r) for r in results]
+    paper_infos = "\n\n# Abstract\n" + "".join(paper_infos)
     jsonl = convert_results_to_dict(results)
     save_markdown_table(jsonl, markdown_directory,
                         headers=TABLE_HEADERS,
-                        suffix=keyword)
+                        suffix=keyword,
+                        extra_info=paper_infos)
     path = osp.join(output_directory, f'keyword @ {keyword}.txt')
     logger.info(f'[{keyword}]: Saving {len(results)} results to {path}')
     with open(path, 'w') as fp:
@@ -286,6 +292,26 @@ def format_result(result: arxiv.Result, index: int = None) -> str:
     if index is not None:
         result = f' - INDEX: {str(index).zfill(4)}\n' + result
     result = '=' * 64 + '\n' + result
+    return result
+
+
+def format_result_markdown(result: arxiv.Result, index: int = None) -> str:
+    authors = [au.name for au in result.authors]
+    authors = ', '.join(authors)
+    result = (
+        f'\n## {result.title}\n\n'
+        f' - pdf link: {result.pdf_url}\n'
+        f' - abstract link: {result.entry_id}\n'
+        f' - authors: {authors}\n'
+        f' - publish date: {result.published}\n'
+        f' - updated date: {result.updated}\n'
+        f' - primary category: {result.primary_category}\n'
+        f' - categories: {", ".join(result.categories)}\n'
+        f' - journal reference: {result.journal_ref}\n\n'
+        f'**ABSTRACT**: \n{result.summary}\n\n'
+    )
+    if index is not None:
+        result = f' - INDEX: {str(index).zfill(4)}\n' + result
     return result
 
 

@@ -6,5 +6,6 @@ def make_markdown_table(contents: list[dict],
     table = '| Index ' + table
     table += f"| --- | {' | '.join(['---' for _ in headers])} |\n"
     for idx, row in enumerate(contents):
+        row['title'] = f"[[#{row['title']}]]"
         table += f"| {idx+1} | {' | '.join([str(row[h]) for h in headers])} |\n"
     return table
