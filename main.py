@@ -1,5 +1,4 @@
 
-from importlib.metadata import metadata
 import json
 import os
 import logging

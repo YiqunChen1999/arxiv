@@ -43,8 +43,18 @@ def setup_logger(output_directory: str = None):
         kwargs['filename'] = osp.join(log_dir, f'{curr_date}-{curr_time}.txt')
     logging.basicConfig(**kwargs)
 
-    console_handler = logging.StreamHandler()
-    # console_handler.setFormatter(logging.Formatter(kwargs['format']))
-    console_handler.setFormatter(CustomFormatter())
-    # logger.addHandler(console_handler)
-    logging.getLogger('').addHandler(console_handler)
+    logger = logging.getLogger()
+    handlers = (logger.handlers if len(logger.handlers)
+                else logger.root.handlers)
+    def is_console_handler(handler: logging.Handler):
+        return (isinstance(handler, logging.StreamHandler)
+                and not isinstance(handler, logging.FileHandler))
+
+    if not any([is_console_handler(h) for h in handlers]):
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(CustomFormatter())
+        logger.addHandler(console_handler)
+    else:
+        for handler in handlers:
+            if is_console_handler(handler):
+                handler.setFormatter(CustomFormatter())
