@@ -141,10 +141,10 @@ def default_configs():
 
 @dataclass
 class Configs:
-    url: str = field(
+    link: str = field(
         metadata={
             "required": True,
-            "help": "The url to download the paper"
+            "help": "The link to download the paper"
         }
     )
     main_subdir: str = field(
@@ -158,9 +158,9 @@ class Configs:
         default="",
         metadata={"help": "Specify a tag for better retrieving."}
     )
-    code_url: str = field(
+    code_link: str = field(
         default="",
-        metadata={"help": "URL to code of this paper."}
+        metadata={"help": "link to code of this paper."}
     )
     journal: str = field(
         default="arxiv",
@@ -175,8 +175,12 @@ class Configs:
     )
 
     def __post_init__(self):
-        parts = self.url.split('/')[-1]
+        parts = self.link.split('/')[-1]
         self.id = parts.split('v')[0]
+        if len(parts) == 1:
+            self.version = 'v1'
+        else:
+            self.version = f"v{parts[-1]}"
         setup_logger()
 
     def __str__(self) -> str:
@@ -194,31 +198,72 @@ def main():
 
 
 def download(cfgs: Configs):
-    query = f"id:{cfgs.id}"
-    client = arxiv.Client(num_retries=10)
-    for i in range(10):
-        search = arxiv.Search(query=query, max_results=10)
-        results = list(client.results(search))
-        logger.info(f"Got {len(results)} items.")
-        if len(results) > 1:
-            logger.warning(
-                f"Got multiple items, please check again. Results: {results}")
-            results = results[:1]
-        if len(results) > 0:
-            break
-    else:
-        logger.warning(f"Cannot fetch the specified paper {cfgs.url}.")
-        return None
-    result = results[0]
-    title = (result.title
-             .replace(": ", "：").replace("?", "？")
-             .replace("<", "").replace(">", "")
-             .replace('"', "'").replace("/", "").replace("\\", "")
-             .replace("|", "or").replace("*", "Star"))
-    if title != result.title:
-        logger.warning(f"Original title: {result.title}. New title: {title}.")
+    result = query_paper(cfgs)
+    title = format_valid_title(result)
     filename = f"{title}.pdf"
-    meta = META.format(cfgs.journal, result.entry_id, cfgs.code_url,
+    md_path = osp.join(cfgs.markdown_directory,
+                       cfgs.main_subdir, f"{title}.md")
+    paper_path = osp.join(cfgs.download_directory, filename)
+
+    if check_if_giveup(md_path, paper_path):
+        return
+
+    logger.info(f"Writing to markdown: {md_path}.")
+    content = prepare_markdown_content(cfgs, result, filename)
+
+    write_markdown_file(md_path, content)
+    _download(cfgs, result, filename)
+
+
+def write_markdown_file(md_path: str, content: str):
+    if not osp.exists(md_path):
+        with open(md_path, 'w') as fp:
+            fp.write(content)
+    else:
+        logger.warning("Markdown file exists, I won't overwrite it.")
+
+
+def _download(cfgs: Configs, result: arxiv.Result, filename: str):
+    logger.info(f"Downloading paper to {cfgs.download_directory}")
+    if osp.exists(osp.join(cfgs.download_directory, filename)):
+        filename = filename.replace(".pdf", f"{cfgs.version}.pdf")
+        logger.warning(
+            f"Paper exists, download the newest version. "
+            f"Paper path: {osp.join(cfgs.download_directory, filename)}.")
+    for _ in range(10):
+        try:
+            result.download_pdf(dirpath=cfgs.download_directory,
+                                filename=filename)
+            logger.info("Download success.")
+            break
+        except Exception as e:
+            logger.warning("Failed to download paper, retry again.")
+    else:
+        logger.error("Failed to download paper after 10 attempts.")
+        return
+
+
+def check_if_giveup(md_path: str, paper_path: str) -> bool:
+    giveup = False
+    logger.info(f"Markdown Path: {md_path}")
+    logger.info(f"Paper Path: {paper_path}")
+    paper_exists = check_if_exists(md_path, paper_path)
+    if paper_exists:
+        override_exists = input("Paper exists, override it? [y/N] ")
+        if override_exists.lower() in ('y', 'yes'):
+            giveup = False
+        else:
+            giveup = True
+    return giveup
+
+
+def check_if_exists(md_path: str, paper_path: str) -> bool:
+    return osp.exists(md_path) and osp.exists(paper_path)
+
+
+def prepare_markdown_content(
+        cfgs: Configs, result: arxiv.Result, filename: str) -> str:
+    meta = META.format(cfgs.journal, result.entry_id, cfgs.code_link,
                        result.published.strftime("%Y-%m-%d")[:10],
                        "\n"+"\n".join([" - "+t for t in cfgs.tags.split(",")]))
     temp = TEMPLATE.format(
@@ -233,23 +278,38 @@ def download(cfgs: Configs):
          .replace("\\mnt\\h", "file:///H:")
          .replace("\\mnt\\i", "file:///I:")))
     content = meta + OBSIDIAN_NAVIGATION + temp
-    md_path = osp.join(cfgs.markdown_directory,
-                       cfgs.main_subdir, f"{title}.md")
-    logger.info(f"Writing to markdown: {md_path}.")
-    with open(md_path, 'w') as fp:
-        fp.write(content)
-    logger.info(f"Downloading paper to {cfgs.download_directory}")
-    for _ in range(10):
-        try:
-            result.download_pdf(dirpath=cfgs.download_directory,
-                                filename=filename)
-            logger.info("Download success.")
+    return content
+
+
+def format_valid_title(result: arxiv.Result) -> str:
+    title = (result.title
+             .replace(": ", "：").replace("?", "？")
+             .replace("<", "").replace(">", "")
+             .replace('"', "'").replace("/", "").replace("\\", "")
+             .replace("|", "or").replace("*", "Star"))
+    if title != result.title:
+        logger.warning(f"Original title: {result.title}. New title: {title}.")
+    return title
+
+
+def query_paper(cfgs: Configs) -> None | arxiv.Result:
+    query = f"id:{cfgs.id}"
+    client = arxiv.Client(num_retries=10)
+    for i in range(10):
+        search = arxiv.Search(query=query, max_results=10)
+        results = list(client.results(search))
+        logger.info(f"Got {len(results)} items.")
+        if len(results) > 1:
+            logger.warning(
+                f"Got multiple items, please check again. Results: {results}")
+            results = results[:1]
+        if len(results) > 0:
             break
-        except Exception as e:
-            logger.warning("Failed to download paper, retry again.")
     else:
-        logger.error("Failed to download paper after 10 attempts.")
-        return
+        logger.warning(f"Cannot fetch the specified paper {cfgs.link}.")
+        return None
+    result = results[0]
+    return result
 
 
 def parse_cfgs() -> Configs:
