@@ -199,6 +199,9 @@ def main():
 
 def download(cfgs: Configs):
     result = query_paper(cfgs)
+    if result is None:
+        return
+    logger.info(f"Comment: {result.comment}")
     title = format_valid_title(result)
     filename = f"{title}.pdf"
     md_path = osp.join(cfgs.markdown_directory,
