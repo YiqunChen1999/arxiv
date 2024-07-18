@@ -147,7 +147,7 @@ class Configs:
             "help": "The link to download the paper"
         }
     )
-    main_subdir: str = field(
+    markdown_subfolder: str = field(
         metadata={
             "required": True,
             "help": ("Which main subdir to save markdown file under "
@@ -205,7 +205,7 @@ def download(cfgs: Configs):
     title = format_valid_title(result)
     filename = f"{title}.pdf"
     md_path = osp.join(cfgs.markdown_directory,
-                       cfgs.main_subdir, f"{title}.md")
+                       cfgs.markdown_subfolder, f"{title}.md")
     paper_path = osp.join(cfgs.download_directory, filename)
 
     if check_if_giveup(md_path, paper_path):
