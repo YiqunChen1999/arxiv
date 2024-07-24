@@ -227,6 +227,7 @@ def convert_results_to_dict(results: list[arxiv.Result]) -> list[dict]:
         'paper pdf link': result.pdf_url,
         'paper abstract link': result.entry_id,
         'doi': result.doi,
+        'comment': result.comment,
         'abstract': result.summary,
     } for result in results]
 
@@ -289,6 +290,7 @@ def format_result(result: arxiv.Result, index: int = None) -> str:
         f' - paper pdf link: {result.pdf_url}\n'
         f' - paper abstract link: {result.entry_id}\n'
         f' - doi: {result.doi}\n'
+        f' - comment: {result.comment}\n'
         f' - abstract: {result.summary}\n\n'
     )
     if index is not None:
@@ -309,6 +311,7 @@ def format_result_markdown(result: arxiv.Result, index: int = None) -> str:
         f' - updated date: {result.updated}\n'
         f' - primary category: {result.primary_category}\n'
         f' - categories: {", ".join(result.categories)}\n'
+        f' - comment: {result.comment}\n'
         f' - journal reference: {result.journal_ref}\n\n'
         f'**ABSTRACT**: \n{result.summary}\n\n'
     )
