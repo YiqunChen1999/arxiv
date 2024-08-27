@@ -9,9 +9,11 @@ from dataclasses import dataclass, field
 
 import arxiv
 
+from agent import Agent
 from parsing import ArgumentParser
 from logger import setup_logger
 from markdown import make_markdown_table
+from tasks import Tasks, execute
 
 
 logger = logging.getLogger(__name__)
@@ -63,6 +65,8 @@ DOCUMENTS = dict(
     markdown_directory=("The directory to save the markdown (table) files."),
     query=("If you're familar with arxiv api search query, you can directly "
            "specify the search query. All the above items will be ignored."),
+    translation=("Whether to translate the abstract into Chinese."),
+    model="Language model to execute various tasks, e.g., translation."
 )
 
 
@@ -117,6 +121,12 @@ class Configs:
     query: str = field(
         default=default_configs().get('query'),
         metadata={"help": DOCUMENTS["query"]})
+    translate: bool = field(
+        default=False,
+        metadata={"help": DOCUMENTS["translation"]})
+    model: str = field(
+        default="",
+        metadata={"help": DOCUMENTS["model"]})
 
     def __post_init__(self):
         self.datetime = parse_date(self.datetime)
@@ -139,6 +149,12 @@ class Configs:
         return string
 
 
+class Result(arxiv.Result):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.chinese_summary = ""
+
+
 def main():
     cfgs = parse_cfgs()
     logger.info(f"Configs: {cfgs}")
@@ -147,6 +163,12 @@ def main():
 
 def search_and_parse(cfgs: Configs):
     results = search(cfgs)
+    results: list[Result] = [Result._from_feed_entry(r._raw) for r in results]
+    if cfgs.translate and cfgs.model:
+        agent = Agent(cfgs.model)
+        for result in results:
+            result.chinese_summary = execute(
+                Tasks.translation, agent=agent, context=result.summary)
     jsonl = convert_results_to_dict(results)
     save_results_to_jsonl(jsonl, cfgs.output_directory)
     save_markdown_table(jsonl, cfgs.markdown_directory, TABLE_HEADERS)
@@ -220,8 +242,8 @@ def save_results_to_jsonl(results: list[dict], output_directory: str):
     return path
 
 
-def convert_results_to_dict(results: list[arxiv.Result]) -> list[dict]:
-    return [{
+def convert_results_to_dict(results: list[Result]) -> list[dict]:
+    returns = [{
         'title': result.title,
         'publish date': result.published.strftime("%Y-%m-%d, %H:%M:%S"),
         'updated date': result.updated.strftime("%Y-%m-%d, %H:%M:%S"),
@@ -234,10 +256,12 @@ def convert_results_to_dict(results: list[arxiv.Result]) -> list[dict]:
         'doi': result.doi,
         'comment': result.comment,
         'abstract': result.summary,
+        'Chinese Abstract': result.chinese_summary,
     } for result in results]
+    return returns
 
 
-def save_by_keywords(results: list[arxiv.Result],
+def save_by_keywords(results: list[Result],
                      keywords: list[str],
                      output_directory: str,
                      markdown_directory: str):
@@ -245,7 +269,7 @@ def save_by_keywords(results: list[arxiv.Result],
         save_by_keyword(results, keyword, output_directory, markdown_directory)
 
 
-def save_by_keyword(results: list[arxiv.Result],
+def save_by_keyword(results: list[Result],
                     keyword: str,
                     output_directory: str,
                     markdown_directory: str):
@@ -281,7 +305,7 @@ def save_by_keyword(results: list[arxiv.Result],
     logger.info('DONE.')
 
 
-def format_result(result: arxiv.Result, index: int = None) -> str:
+def format_result(result: Result, index: int = None) -> str:
     authors = [au.name for au in result.authors]
     authors = ', '.join(authors)
     result = (
@@ -297,6 +321,7 @@ def format_result(result: arxiv.Result, index: int = None) -> str:
         f' - doi: {result.doi}\n'
         f' - comment: {result.comment}\n'
         f' - abstract: {result.summary}\n\n'
+        f' - Chinese abstract: {result.chinese_summary}\n\n'
     )
     if index is not None:
         result = f' - INDEX: {str(index).zfill(4)}\n' + result
@@ -304,7 +329,7 @@ def format_result(result: arxiv.Result, index: int = None) -> str:
     return result
 
 
-def format_result_markdown(result: arxiv.Result, index: int = None) -> str:
+def format_result_markdown(result: Result, index: int = None) -> str:
     authors = [au.name for au in result.authors]
     authors = ', '.join(authors)
     result = (
@@ -319,6 +344,7 @@ def format_result_markdown(result: arxiv.Result, index: int = None) -> str:
         f' - comment: {result.comment}\n'
         f' - journal reference: {result.journal_ref}\n\n'
         f'**ABSTRACT**: \n{result.summary}\n\n'
+        f'**CHINESE ABSTRACT**: \n{result.chinese_summary}\n\n'
     )
     if index is not None:
         result = f' - INDEX: {str(index).zfill(4)}\n' + result
