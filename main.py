@@ -21,19 +21,24 @@ OBSIDIAN_NAVIGATION = """
 ```dataviewjs
 const folder = dv.current().file.folder;
 
-const countStyleS = "<span style='display:flex; max-width: 30px; justify-content: right; '>";
-const countStyleE = "</span>";
-const linkStyleS = "<span style='display:flex; justify-content: left; '>";
-const linkStyleE = "</span>";
-
-dv.table(["Counts", "Path"], 
+let files = (
     dv.pages(`"${folder}"`)
     .where(p => !p.file.name.includes("_Navigation"))
     .sort(p => p.file.name)
     .map(p => [
-        countStyleS + p.counts + countStyleE, 
-        linkStyleS + p.file.link + linkStyleE
-    ])
+	    p.file.link + " (" + p.counts.toString() + ")"
+    ]))
+
+let num_cols = 3
+let num_items = files.length
+let reshaped = []
+
+for (let i=0; i < num_items; i += num_cols){
+	reshaped.push(files.slice(i, i+num_cols));
+}
+
+dv.table(["#_hide_header ", "#_hide_header ", "#_hide_header "], 
+    reshaped
 );
 ```
 
