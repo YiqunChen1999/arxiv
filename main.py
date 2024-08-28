@@ -1,6 +1,7 @@
 
-import json
 import os
+import re
+import json
 import logging
 import datetime
 import os.path as osp
@@ -8,12 +9,13 @@ from functools import lru_cache
 from dataclasses import dataclass, field
 
 import arxiv
+from feedparser.util import FeedParserDict
 
 from agent import Agent
 from parsing import ArgumentParser
 from logger import setup_logger
 from markdown import make_markdown_table
-from tasks import Tasks, execute
+from tasks import Tasks, execute, execute_batches
 
 
 logger = logging.getLogger(__name__)
@@ -66,7 +68,8 @@ DOCUMENTS = dict(
     query=("If you're familar with arxiv api search query, you can directly "
            "specify the search query. All the above items will be ignored."),
     translation=("Whether to translate the abstract into Chinese."),
-    model="Language model to execute various tasks, e.g., translation."
+    model="Language model to execute various tasks, e.g., translation.",
+    batch_mode="Process by agent in batch mode or not, e.g., translation.",
 )
 
 
@@ -127,6 +130,9 @@ class Configs:
     model: str = field(
         default="",
         metadata={"help": DOCUMENTS["model"]})
+    batch_mode: bool = field(
+        default=False,
+        metadata={"help": DOCUMENTS["batch_mode"]})
 
     def __post_init__(self):
         self.datetime = parse_date(self.datetime)
@@ -154,6 +160,42 @@ class Result(arxiv.Result):
         super().__init__(*args, **kwargs)
         self.chinese_summary = ""
 
+    def _from_feed_entry(entry: FeedParserDict) -> "Result":
+        """
+        Converts a feedparser entry for an arXiv search result feed into a
+        Result object.
+        """
+        if not hasattr(entry, "id"):
+            raise Result.MissingFieldError("id")
+        # Title attribute may be absent for certain titles. Defaulting to "0" as
+        # it's the only title observed to cause this bug.
+        # https://github.com/lukasschwab/arxiv.py/issues/71
+        # title = entry.title if hasattr(entry, "title") else "0"
+        title = "0"
+        if hasattr(entry, "title"):
+            title = entry.title
+        else:
+            logger.warning(
+                "Result %s is missing title attribute; defaulting to '0'",
+                entry.id
+            )
+        return Result(
+            entry_id=entry.id,
+            updated=Result._to_datetime(entry.updated_parsed),
+            published=Result._to_datetime(entry.published_parsed),
+            title=re.sub(r"\s+", " ", title),
+            authors=[Result.Author._from_feed_author(a)
+                     for a in entry.authors],
+            summary=entry.summary,
+            comment=entry.get("arxiv_comment"),
+            journal_ref=entry.get("arxiv_journal_ref"),
+            doi=entry.get("arxiv_doi"),
+            primary_category=entry.arxiv_primary_category.get("term"),
+            categories=[tag.get("term") for tag in entry.tags],
+            links=[Result.Link._from_feed_link(link) for link in entry.links],
+            _raw=entry,
+        )
+
 
 def main():
     cfgs = parse_cfgs()
@@ -162,26 +204,38 @@ def main():
 
 
 def search_and_parse(cfgs: Configs):
+    def save(cfgs: Configs, results: list[Result]):
+        jsonl = convert_results_to_dict(results)
+        save_results_to_jsonl(jsonl, cfgs.output_directory)
+        save_markdown_table(jsonl, cfgs.markdown_directory, TABLE_HEADERS)
+        make_navigation_list(cfgs.markdown_directory)
+        path = osp.join(cfgs.output_directory, "papers.txt")
+        logger.info(f'Saving {len(results)} results to {path}')
+        with open(path, 'w') as fp:
+            fp.writelines([format_result(r, i)
+                        for i, r in enumerate(results)])
+        save_by_keywords(results, cfgs.keyword_list,
+                        cfgs.output_directory,
+                        cfgs.markdown_directory)
+
     results = search(cfgs)
     results: list[Result] = [Result._from_feed_entry(r._raw) for r in results]
+    save(cfgs, results)
+
     if cfgs.translate and cfgs.model:
         agent = Agent(cfgs.model)
-        for result in results:
-            result.chinese_summary = execute(
-                Tasks.translation, agent=agent, context=result.summary)
-    jsonl = convert_results_to_dict(results)
-    save_results_to_jsonl(jsonl, cfgs.output_directory)
-    save_markdown_table(jsonl, cfgs.markdown_directory, TABLE_HEADERS)
-    make_navigation_list(cfgs.markdown_directory)
-
-    path = osp.join(cfgs.output_directory, "papers.txt")
-    logger.info(f'Saving {len(results)} results to {path}')
-    with open(path, 'w') as fp:
-        fp.writelines([format_result(r, i)
-                       for i, r in enumerate(results)])
-    save_by_keywords(results, cfgs.keyword_list,
-                     cfgs.output_directory,
-                     cfgs.markdown_directory)
+        logger.info(f"Executing translation task with {cfgs.model}.")
+        if cfgs.batch_mode:
+            summaries = [r.summary for r in results]
+            chinese_summaries = execute_batches(
+                Tasks.translation, agent=agent, contexts=summaries)
+            for r, cs in zip(results, chinese_summaries):
+                r.chinese_summary = cs
+        else:
+            for result in results:
+                result.chinese_summary = execute(
+                    Tasks.translation, agent=agent, context=result.summary)
+        save(cfgs, results)
 
 
 def save_markdown_table(results: list[dict],
@@ -332,6 +386,7 @@ def format_result(result: Result, index: int = None) -> str:
 def format_result_markdown(result: Result, index: int = None) -> str:
     authors = [au.name for au in result.authors]
     authors = ', '.join(authors)
+    chinese_summary = result.chinese_summary
     result = (
         f'\n## {result.title}\n\n'
         f' - pdf link: {result.pdf_url}\n'
@@ -344,8 +399,9 @@ def format_result_markdown(result: Result, index: int = None) -> str:
         f' - comment: {result.comment}\n'
         f' - journal reference: {result.journal_ref}\n\n'
         f'**ABSTRACT**: \n{result.summary}\n\n'
-        f'**CHINESE ABSTRACT**: \n{result.chinese_summary}\n\n'
     )
+    if chinese_summary:
+        result += f'**CHINESE ABSTRACT**: \n{chinese_summary}\n\n'
     if index is not None:
         result = f' - INDEX: {str(index).zfill(4)}\n' + result
     return result

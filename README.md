@@ -45,4 +45,11 @@ Example:
 export ZHIPU_API_KEY="YOUR_ZHIPU_API_KEY"; python main.py --translate --model "zhipu-glm-4-flash"
 ```
 
-**NOTE:** Currently the results are processed one by one, and the ZhipuAI API requires seconds to finish the translation for one result. So I recommend fetching a non-translation version first, then re-run for the translated version.
+Or, using the batch mode:
+```bash
+export ZHIPU_API_KEY="YOUR_ZHIPU_API_KEY"; python main.py --translate --model "zhipu-glm-4-flash" --batch_mode
+```
+
+**NOTE:** `batch_mode` of ZhipuAI requires a verification.
+
+**NOTE:** Language model may produce incorrect results.
