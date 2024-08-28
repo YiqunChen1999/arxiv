@@ -165,9 +165,12 @@ class Agent:
                              [0]["message"]["content"])
             for r in finished if r["response"]["status_code"] == 200
         }
-        keys = sorted(list(responses.keys()))
-        responses = [responses[k] for k in keys]
+        # keys = sorted(list(responses.keys()))
+        keys = sorted([it["custom_id"] for it in batch_items])
+        responses = [responses.get(k, "") for k in keys]
+        logger.info(f"Deleting input file {task_file.id}")
         _ = self.client.files.delete(file_id=task_file.id)
+        logger.info(f"Deleting output file {job.output_file_id}")
         _ = self.client.files.delete(file_id=job.output_file_id)
         return responses
 

@@ -3,3 +3,4 @@ markdown
 configs.json
 .vscode
 *__pycache__*
+tmp
