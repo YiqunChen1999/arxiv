@@ -223,6 +223,9 @@ def search_and_parse(cfgs: Configs):
     save(cfgs, results)
 
     if cfgs.translate and cfgs.model:
+        if len(results) == 0:
+            logger.warn("No results found, skip translation.")
+            return
         agent = Agent(cfgs.model)
         logger.info(f"Executing translation task with {cfgs.model}.")
         if cfgs.batch_mode:
