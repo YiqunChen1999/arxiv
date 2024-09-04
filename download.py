@@ -1,16 +1,15 @@
 
 import json
-import logging
 import os.path as osp
 from functools import lru_cache
 from dataclasses import dataclass, field
 
 import arxiv
-from logger import setup_logger
+from logger import create_logger, setup_format
 from parsing import ArgumentParser
 
 
-logger = logging.getLogger(__name__)
+logger = None
 
 
 META = """---
@@ -181,7 +180,9 @@ class Configs:
             self.version = 'v1'
         else:
             self.version = f"v{parts[-1]}"
-        setup_logger()
+        global logger
+        logger = create_logger(__name__)
+        setup_format()
 
     def __str__(self) -> str:
         string = "Configs:\n"
@@ -240,7 +241,7 @@ def _download(cfgs: Configs, result: arxiv.Result, filename: str):
             logger.info("Download success.")
             break
         except Exception as e:
-            logger.warning("Failed to download paper, retry again.")
+            logger.warning(f"Failed to download paper, retry again.\n{e}")
     else:
         logger.error("Failed to download paper after 10 attempts.")
         return

@@ -2,10 +2,9 @@
 import os
 import re
 import json
-import logging
 import datetime
 import os.path as osp
-from functools import lru_cache
+from functools import lru_cache, partial
 from dataclasses import dataclass, field
 
 import arxiv
@@ -13,12 +12,12 @@ from feedparser.util import FeedParserDict
 
 from agent import Agent
 from parsing import ArgumentParser
-from logger import setup_logger
+from logger import create_logger, setup_format
 from markdown import make_markdown_table
 from tasks import Tasks, execute, execute_batches
 
 
-logger = logging.getLogger(__name__)
+logger = None
 
 
 OBSIDIAN_NAVIGATION = """
@@ -76,19 +75,23 @@ DOCUMENTS = dict(
 TABLE_HEADERS = (
     'title', 'primary category', 'paper abstract link', 'paper pdf link'
 )
-DEFAULT_KEYWORDS = [
-    "detect", "diffusion", "segment",
-
-    "vision", "visual",
-    "vision-language", "vision language",
-    "multimodal", "multi-modal", "multi modal", 
-    "vlm", "mllm",
-
-    "segment&vision", "segment&visual",
-    "segment&vision-language", "segment&vision language",
-    "segment&multimodal", "segment&multi-modal", "segment&multi modal",
-    "segment&vlm", "segment&mllm"
-]
+DEFAULT_KEYWORDS = {
+    "detect": ["detect", "detection"],
+    "diffusion": ["diffusion"],
+    "segment": ["segment", "segmentation"],
+    "vision": ["vision", "visual"],
+    "vision-language": ["vision-language", "vision language"],
+    "multimodal": [
+        "multimodal", "multi-modal", "multi modal", "vlm", "mllm",
+        "vision language", "vision-language"
+    ],
+    "segment & vision": ["segment & vision", "segment & visual"],
+    "segment & multimodal": [
+        "segment & multimodal", "segment & multi-modal",
+        "segment & multi modal", "segment & vlm", "segment & mllm",
+        "segment & vision language", "segment & vision-language"
+    ]
+}
 
 
 @lru_cache
@@ -97,7 +100,8 @@ def default_configs():
         return {}
     with open('configs.json', 'r') as fp:
         configs = json.load(fp)
-    configs['keywords'] = '|'.join(configs['keywords'])
+    if isinstance(configs['keywords'], list):
+        configs['keywords'] = '|'.join(configs['keywords'])
     return configs
 
 
@@ -109,8 +113,10 @@ class Configs:
         metadata={"help": DOCUMENTS["categories"]})
     num_retries: int = field(
         default=default_configs().get('num_retries', 10))
-    keywords: str = field(
-        default=default_configs().get('keywords', '|'.join(DEFAULT_KEYWORDS)),
+    keywords: dict[str, list[str]] = field(
+        default_factory=partial(
+            default_configs().get, 'keywords', DEFAULT_KEYWORDS
+        ),
         metadata={"help": DOCUMENTS["keywords"]})
     datetime: str = field(
         default=default_configs().get('datetime', None),
@@ -136,7 +142,13 @@ class Configs:
 
     def __post_init__(self):
         self.datetime = parse_date(self.datetime)
-        self.keyword_list: list[str] = self.keywords.split("|")
+        if isinstance(self.keywords, str):
+            self.keyword_list: list[str] = self.keywords.split("|")
+            self.keyword_list = [kw.strip() for kw in self.keyword_list]
+        elif isinstance(self.keywords, list):
+            self.keyword_list: list[str] = self.keywords
+        else:
+            self.keyword_list: list[str] = None
         if self.query is None:
             self.query = f"{self.categories} AND {self.datetime}"
         self.output_directory = osp.join(self.output_directory,
@@ -145,7 +157,9 @@ class Configs:
                                            self.datetime.split('[')[1][:8])
         os.makedirs(self.output_directory, exist_ok=True)
         os.makedirs(self.markdown_directory, exist_ok=True)
-        setup_logger(self.output_directory)
+        global logger
+        logger = create_logger(__name__, self.output_directory)
+        setup_format()
 
     def __str__(self) -> str:
         string = "Configs:\n"
@@ -214,9 +228,14 @@ def search_and_parse(cfgs: Configs):
         with open(path, 'w') as fp:
             fp.writelines([format_result(r, i)
                         for i, r in enumerate(results)])
-        save_by_keywords(results, cfgs.keyword_list,
-                        cfgs.output_directory,
-                        cfgs.markdown_directory)
+        if isinstance(cfgs.keywords, dict):
+            save_by_keyword_groups(results, cfgs.keywords,
+                                   cfgs.output_directory,
+                                   cfgs.markdown_directory)
+        else:
+            save_by_keywords(results, cfgs.keyword_list,
+                             cfgs.output_directory,
+                             cfgs.markdown_directory)
 
     results = search(cfgs)
     results: list[Result] = [Result._from_feed_entry(r._raw) for r in results]
@@ -261,7 +280,7 @@ def save_markdown_table(results: list[dict],
 
 
 def make_navigation_list(output_directory: str):
-    path = osp.join(output_directory, f"_Navigation.md")
+    path = osp.join(output_directory, "_Navigation.md")
     logger.info(f"Saving navigation list to {path}")
     osp.basename(output_directory)
     date = osp.basename(output_directory)
@@ -318,10 +337,76 @@ def convert_results_to_dict(results: list[Result]) -> list[dict]:
     return returns
 
 
+def save_by_keyword_groups(results: list[Result],
+                           keyword_groups: dict[str, list[str]],
+                           output_directory: str,
+                           markdown_directory: str):
+    logger.info(f"Saving by keyword groups: {keyword_groups.keys()}")
+    for group, keywords in keyword_groups.items():
+        save_by_keyword_group(results, group, keywords,
+                              output_directory, markdown_directory)
+
+
+def save_by_keyword_group(results: list[Result],
+                          group_name: str,
+                          keywords: list[str],
+                          output_directory: str,
+                          markdown_directory: str):
+    filtered_results: list[Result] = []
+    for _, keyword in enumerate(keywords):
+        rs = filter_results_by_keyword(results, keyword)
+        filtered_results.extend(rs)
+    paper_infos = [format_result_markdown(r) for r in filtered_results]
+    paper_infos = "\n\n# Abstract\n" + "".join(paper_infos)
+    jsonl = convert_results_to_dict(filtered_results)
+    save_markdown_table(jsonl, markdown_directory,
+                        headers=TABLE_HEADERS,
+                        suffix=group_name,
+                        extra_info=paper_infos)
+    path = osp.join(output_directory, f'keyword @ {group_name}.txt')
+    msg = f'[{group_name}]: Saving {len(filtered_results)} results to {path}'
+    logger.info(msg)
+    with open(path, 'w', encoding="UTF-8") as fp:
+        fp.writelines([format_result(r, i) for i, r in enumerate(filtered_results)])
+    logger.info('DONE.')
+
+
+def filter_results_by_keyword(results: list[Result], keyword: str):
+    if '&' in keyword:
+        return _filter_results_by_and_logic(results, keyword)
+    return _filter_results(results, keyword)
+
+
+def _filter_results_by_and_logic(results: list[Result], keyword: str):
+    assert '&' in keyword
+    keywords = keyword.split('&')
+    keywords = [kw.strip() for kw in keywords]
+    filtered_results = list(
+        filter(
+            lambda r: all(kw in r.summary.lower() or kw in r.title.lower()
+                          for kw in keywords),
+            results
+        )
+    )
+    return filtered_results
+
+
+def _filter_results(results: list[Result], keyword: str):
+    filtered_results = list(
+        filter(
+            lambda r: (keyword in r.summary.lower()
+                        or keyword in r.title.lower()),
+            results
+        )
+    )
+    return filtered_results
+
+
 def save_by_keywords(results: list[Result],
                      keywords: list[str],
                      output_directory: str,
                      markdown_directory: str):
+    logger.info(f"Saving by keywords: {keywords}")
     for keyword in keywords:
         save_by_keyword(results, keyword, output_directory, markdown_directory)
 
@@ -330,24 +415,7 @@ def save_by_keyword(results: list[Result],
                     keyword: str,
                     output_directory: str,
                     markdown_directory: str):
-    if '&' in keyword:
-        keywords = keyword.split('&')
-        keywords = [kw.strip() for kw in keywords]
-        results = list(
-            filter(
-                lambda r: all(kw in r.summary.lower() or kw in r.title.lower()
-                              for kw in keywords),
-                results
-            )
-        )
-    else:
-        results = list(
-            filter(
-                lambda r: (keyword in r.summary.lower()
-                           or keyword in r.title.lower()),
-                results
-            )
-        )
+    results = filter_results_by_keyword(results, keyword)
     paper_infos = [format_result_markdown(r) for r in results]
     paper_infos = "\n\n# Abstract\n" + "".join(paper_infos)
     jsonl = convert_results_to_dict(results)

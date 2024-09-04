@@ -1,13 +1,40 @@
 
 import os
 import logging
-import datetime
-import os.path as osp
+import logging.config
+from datetime import datetime
+from logging import StreamHandler, FileHandler, Formatter, LoggerAdapter
+from functools import lru_cache
+from typing import Any, Callable
+try:
+    from accelerate import PartialState  # type: ignore
+    ACCELERATE_AVAILABLE = True
+except ImportError:
+    ACCELERATE_AVAILABLE = False
 
-LOGGER_FORMAT = '{}[%(asctime)s %(levelname)s %(name)s]:{} %(message)s'
+
+PROMPT = ("[%(asctime)s] [%(levelname)s] "
+          "[%(filename)s:%(lineno)s:%(funcName)s] ")
+MESSAGE = "%(message)s"
+DATEFMT = "%Y-%m-%d %H:%M:%S"
+LOGGING_CONFIG = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "console": {"format": PROMPT + MESSAGE, "datefmt": DATEFMT},
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "console",
+        },
+    },
+    "root": {"level": "INFO", "handlers": ["console"]},
+}
+logging.config.dictConfig(LOGGING_CONFIG)
 
 
-class CustomFormatter(logging.Formatter):
+class ColorFormatter(Formatter):
     BOLD = '\033[1m'
     COLOR = '\033[1;%dm'
     RESET = "\033[0m"
@@ -16,45 +43,114 @@ class CustomFormatter(logging.Formatter):
     )
 
     FORMATS = {
-        logging.DEBUG: LOGGER_FORMAT.format(BLUE, RESET),
-        logging.INFO: LOGGER_FORMAT.format(GREEN, RESET),
-        logging.WARNING: LOGGER_FORMAT.format(YELLOW, RESET),
-        logging.ERROR: LOGGER_FORMAT.format(RED, RESET),
-        logging.CRITICAL: LOGGER_FORMAT.format(BOLD + RED, RESET)
+        logging.DEBUG: BLUE + PROMPT + RESET + MESSAGE,
+        logging.INFO: GREEN + PROMPT + RESET + MESSAGE,
+        logging.WARNING: YELLOW + PROMPT + RESET + MESSAGE,
+        logging.ERROR: RED + PROMPT + RESET + MESSAGE,
+        logging.CRITICAL: BOLD + RED + PROMPT + RESET + MESSAGE,
     }
 
     def format(self, record):
         log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
+        formatter = Formatter(log_fmt)
         return formatter.format(record)
 
 
-def setup_logger(output_directory: str = None):
-    kwargs = dict(
-        format=LOGGER_FORMAT,
-        datefmt='%m/%d/%Y %H:%M:%S',
-        level=logging.INFO,
-    )
-    if output_directory is not None:
-        log_dir = osp.join(output_directory, 'logs')
-        os.makedirs(log_dir, exist_ok=True)
-        curr_date = datetime.datetime.now().strftime('%Y-%m-%d')
-        curr_time = datetime.datetime.now().strftime('%H-%M-%S')
-        kwargs['filename'] = osp.join(log_dir, f'{curr_date}-{curr_time}.txt')
-    logging.basicConfig(**kwargs)
+class Logger:
+    def __init__(self, name: str | None = None) -> None:
+        if name is None:
+            name = __name__.split(".")[0]
+        self.logger = LoggerAdapter(logging.getLogger(name), extra={})
+        if ACCELERATE_AVAILABLE:
+            self.state = PartialState()
+        else:
+            self.state = None
+        self.debug = self.logger.debug
+        self.info = self.logger.info
+        self.warn = self.logger.warn
+        self.warning = self.logger.warning
+        self.error = self.logger.error
+        self.critical = self.logger.critical
+        self.log = self.logger.log
+        self.setLevel = self.logger.setLevel
+        self.exception = self.logger.exception
+        self.logger.setLevel(
+            logging.INFO if self.is_rank_zero else logging.ERROR
+        )
+        setup_format()
 
-    logger = logging.getLogger()
-    handlers = (logger.handlers if len(logger.handlers)
-                else logger.root.handlers)
-    def is_console_handler(handler: logging.Handler):
-        return (isinstance(handler, logging.StreamHandler)
-                and not isinstance(handler, logging.FileHandler))
+    @lru_cache(None)
+    def warning_once(self, *args, **kwargs):
+        self.warning(*args, **kwargs)
 
-    if not any([is_console_handler(h) for h in handlers]):
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(CustomFormatter())
-        logger.addHandler(console_handler)
-    else:
-        for handler in handlers:
-            if is_console_handler(handler):
-                handler.setFormatter(CustomFormatter())
+    @property
+    def rank_zero_only(self) -> Callable[..., Any]:
+        if self.state is None:
+            return lambda func: func
+        return self.state.on_main_process
+
+    @property
+    def is_rank_zero(self) -> bool:
+        if self.state is None:
+            return True
+        return self.state.is_main_process
+
+    @property
+    def rank(self) -> int:
+        if self.state is None:
+            return 0
+        return self.state.process_index
+
+    @property
+    def world_size(self) -> int:
+        if self.state is None:
+            return 1
+        return self.state.num_processes
+
+
+def setup_file_handler(path: str):
+    root = logging.getLogger()
+    handler = FileHandler(path)
+    handler.setFormatter(Formatter(PROMPT + MESSAGE))
+    root.addHandler(handler)
+    setup_format()
+
+
+def setup_format(formatter: Formatter | None = None):
+    setup_libs_format()
+    root = logging.getLogger()
+    for handler in root.handlers:
+        if isinstance(handler, FileHandler):
+            continue
+        elif isinstance(handler, StreamHandler):
+            if formatter is None:
+                formatter = ColorFormatter(PROMPT + MESSAGE)
+            handler.setFormatter(formatter)
+
+
+def create_logger(name: str | None = None,
+                  save_root: str | None = None,
+                  file_name: str | None = None):
+    if name is None:
+        name = __name__.split(".")[0]
+    logger = Logger(name)
+    if save_root is not None:
+        if not os.path.exists(save_root):
+            os.makedirs(save_root, exist_ok=True)
+        if file_name is None:
+            curr_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+            file_name = f"{curr_time}.log"
+        save_path = os.path.join(save_root, file_name)
+        logger.info(f"Logger messages will be saved to {save_path}")
+        setup_file_handler(save_path)
+    logger.info(f"Logger {name} is created.")
+    return logger
+
+
+def setup_libs_format():
+    try:
+        from transformers.utils.logging import _get_library_root_logger  # type: ignore
+    except ImportError:
+        return
+    logger = _get_library_root_logger()
+    logger.propagate = True

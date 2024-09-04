@@ -1,13 +1,14 @@
 
 import os
 import json
-import logging
 from time import sleep
 from typing import Callable
 from dataclasses import dataclass
 
+from logger import create_logger
 
-logger = logging.getLogger(__name__)
+
+logger = create_logger(__name__)
 
 zhipu_api_key = None
 try:
@@ -17,7 +18,7 @@ try:
         logger.warn(
             "Set `ZHIPU_API_KEY` environment variable to use GLM series.")
 except ImportError as e:
-    logger.warn("Use `pip install zhipuai` to use GLM series.")
+    logger.warn(f"Use `pip install zhipuai` to use GLM series.\n{e}")
 
 
 @dataclass
@@ -172,12 +173,13 @@ class Agent:
             logger.info(f"Deleting input file {task_file.id}")
             _ = self.client.files.delete(file_id=task_file.id)
         except Exception as e:
-            logger.info(f"Failed to delete input file {task_file.id}")
+            logger.info(f"Failed to delete input file {task_file.id}, {e}")
         try:
             logger.info(f"Deleting output file {job.output_file_id}")
             _ = self.client.files.delete(file_id=job.output_file_id)
         except Exception as e:
-            logger.info(f"Failed to delete output file {job.output_file_id}")
+            logger.info(
+                f"Failed to delete output file {job.output_file_id}, {e}")
         return responses
 
 
