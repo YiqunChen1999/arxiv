@@ -1,4 +1,5 @@
 
+import re
 import json
 import os.path as osp
 from functools import lru_cache
@@ -176,6 +177,7 @@ class Configs:
     def __post_init__(self):
         parts = self.link.split('/')[-1]
         self.id = parts.split('v')[0]
+        self.link = f"https://arxiv.org/abs/{self.id}"
         if len(parts) == 1:
             self.version = 'v1'
         else:
@@ -203,6 +205,7 @@ def download(cfgs: Configs):
     if result is None:
         return
     logger.info(f"Comment: {result.comment}")
+    cfgs.code_link = parse_github_link_from_result(result, cfgs.code_link)
     title = format_valid_title(result)
     filename = f"{title}.pdf"
     md_path = osp.join(cfgs.markdown_directory,
@@ -217,6 +220,32 @@ def download(cfgs: Configs):
 
     write_markdown_file(md_path, content)
     _download(cfgs, result, filename)
+
+
+def parse_github_link_from_result(result: arxiv.Result, code_link: str = ""):
+    if code_link:
+        return code_link
+    code_link = parse_github_link(result.summary)
+    if code_link == "":
+        code_link = parse_github_link(result.comment)
+    logger.info(f"Code link: {code_link}")
+    return code_link
+
+
+def parse_github_link(text: str | None):
+    if text is None:
+        return ""
+    # Combined regex to match both full and partial URLs
+    pattern = r'https?:\/\/(?:www\.)?github\.com\/[\w-]+\/[\w-]+|(?:www\.)?github\.com\/[\w-]+\/[\w-]+'  # noqa
+    # Find all matches in the text
+    matches: list[str] = re.findall(pattern, text)
+    if len(matches) == 0:
+        return ""
+    # logger.info(f"Found github links: {matches}")
+    link = matches[0]
+    if link.startswith('github.com'):
+        link = 'https://' + link
+    return link
 
 
 def write_markdown_file(md_path: str, content: str):

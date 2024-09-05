@@ -73,7 +73,7 @@ DOCUMENTS = dict(
 
 
 TABLE_HEADERS = (
-    'title', 'primary category', 'paper abstract link', 'paper pdf link'
+    'title', 'primary category', 'paper abstract link', 'code link'
 )
 DEFAULT_KEYWORDS = {
     "detect": ["detect", "detection"],
@@ -173,6 +173,7 @@ class Result(arxiv.Result):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.chinese_summary = ""
+        self.code_link = ""
 
     def _from_feed_entry(entry: FeedParserDict) -> "Result":
         """
@@ -238,7 +239,6 @@ def search_and_parse(cfgs: Configs):
                              cfgs.markdown_directory)
 
     results = search(cfgs)
-    results: list[Result] = [Result._from_feed_entry(r._raw) for r in results]
     save(cfgs, results)
 
     if cfgs.translate and cfgs.model:
@@ -305,7 +305,35 @@ def search(cfgs: Configs):
             break
     if len(results):
         logger.info(f"Range: {results[-1].updated} {results[0].updated}")
+    results: list[Result] = [Result._from_feed_entry(r._raw) for r in results]
+    results = parse_github_link_of_results(results)
     return results
+
+
+def parse_github_link_of_results(results: list[Result]):
+    logger.info("Parsing github links from results.")
+    for result in results:
+        code_link = parse_github_link(result.summary)
+        if code_link == "":
+            code_link = parse_github_link(result.comment)
+        result.code_link = code_link
+    return results
+
+
+def parse_github_link(text: str | None):
+    if text is None:
+        return ""
+    # Combined regex to match both full and partial URLs
+    pattern = r'https?:\/\/(?:www\.)?github\.com\/[\w-]+\/[\w-]+|(?:www\.)?github\.com\/[\w-]+\/[\w-]+'  # noqa
+    # Find all matches in the text
+    matches: list[str] = re.findall(pattern, text)
+    if len(matches) == 0:
+        return ""
+    # logger.info(f"Found github links: {matches}")
+    link = matches[0]
+    if link.startswith('github.com'):
+        link = 'https://' + link
+    return link
 
 
 def save_results_to_jsonl(results: list[dict], output_directory: str):
@@ -328,6 +356,7 @@ def convert_results_to_dict(results: list[Result]) -> list[dict]:
         'categories': result.categories,
         'journal reference': result.journal_ref,
         'paper pdf link': result.pdf_url,
+        'code link': result.code_link,
         'paper abstract link': result.entry_id,
         'doi': result.doi,
         'comment': result.comment,
@@ -441,6 +470,7 @@ def format_result(result: Result, index: int = None) -> str:
         f' - primary category: {result.primary_category}\n'
         f' - categories: {result.categories}\n'
         f' - journal reference: {result.journal_ref}\n'
+        f' - code link: {result.code_link}\n'
         f' - paper pdf link: {result.pdf_url}\n'
         f' - paper abstract link: {result.entry_id}\n'
         f' - doi: {result.doi}\n'
@@ -461,6 +491,7 @@ def format_result_markdown(result: Result, index: int = None) -> str:
     result = (
         f'\n## {result.title}\n\n'
         f' - pdf link: {result.pdf_url}\n'
+        f' - code link: {result.code_link}\n'
         f' - abstract link: {result.entry_id}\n'
         f' - authors: {authors}\n'
         f' - publish date: {result.published}\n'
