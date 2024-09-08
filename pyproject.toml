@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "seqseg"
+version = "0.0.1"
+authors = [
+    {name = "Yiqun Chen", email="chenyiqun2021@ia.ac.cn"},
+]
+description = "Sequence Modeling for Unified Segmentation."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+]
+dependencies = [
+    "torch",
+    "torchvision",
+    "deepspeed",
+    "transformers>=4.37.2",
+    "tokenizers>=0.15.1",
+    "sentencepiece>=0.1.99",
+    "shortuuid",
+    "accelerate>=0.21.0",
+    "peft",
+    "bitsandbytes",
+    "pydantic",
+    "markdown2[all]",
+    "numpy",
+    "scikit-learn>=1.2.2",
+    "gradio",
+    "gradio_client",
+    "requests",
+    "httpx",
+    "uvicorn",
+    "fastapi",
+    "einops",
+    "einops-exts",
+    "lmms-eval>=0.1.1",
+    "timm>=0.6.13",
+    "scikit-image",
+    "pycocotools>=2.0.4",
+    "pycocoevalcap>=1.2",
+    "tensorboardX",
+    "shapely>=2.0.4",
+]
+
+[project.optional-dependencies]
+train = ["deepspeed>=0.12.6", "ninja", "wandb"]
+build = ["build", "twine"]
+
+[project.urls]
+homepage = "https://github.com/yiqunchen1999/dev-seqseg"
+repository = "https://github.com/yiqunchen1999/dev-seqseg"
+documentation = "https://github.com/yiqunchen1999/dev-seqseg"
+
+[tool.setuptools.packages.find]
+exclude = ["assets*", "benchmark*", "docs", "dist*", "playground*",
+           "scripts*", "tests*", "./cache", "./data", "./models",
+           "./runs", "./outputs", "./tmp", "./temp"]
+
+[tool.wheel]
+where = ["."]
+exclude = ["assets*", "benchmark*", "docs", "dist*", "playground*", "scripts*", "tests*"]
+
+[tool.setuptools.package-data]
+"seqseg" = ["py.typed"]
+
+[tool.pyright]
+include = ["seqseg", "eval"]
+exclude = ["cache", "tests", "docs", "build", "dist", ".pytest_cache",
+           ".git", ".github", ".ruff", "data", "wandb", "logs", "checkpoints",
+           "runs", "results", "predictions", "submissions", "tmp"]
