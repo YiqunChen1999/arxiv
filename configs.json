@@ -18,6 +18,40 @@
             "segment & vision language", "segment & vision-language"
         ]
     },
+    "ignored": {
+        "detect": [
+            " disease ", " cancer ", " medical ", " polyp ", " lesion ",
+            " mri ", " tumor ", " lidar "
+        ],
+        "diffusion": [
+            " disease ", " cancer ", " medical ", " polyp ", " lesion ",
+            " mri ", " tumor ", " lidar "
+        ],
+        "segment": [
+            " disease ", " cancer ", " medical ", " polyp ", " lesion ",
+            " mri ", " tumor ", " lidar "
+        ],
+        "vision": [
+            " disease ", " cancer ", " medical ", " polyp ", " lesion ",
+            " mri ", " tumor ", " lidar "
+        ],
+        "vision-language": [
+            " disease ", " cancer ", " medical ", " polyp ", " lesion ",
+            " mri ", " tumor ", " lidar "
+        ],
+        "multimodal": [
+            " disease ", " cancer ", " medical ", " polyp ", " lesion ",
+            " mri ", " tumor ", " lidar "
+        ],
+        "segment & vision": [
+            " disease ", " cancer ", " medical ", " polyp ", " lesion ",
+            " mri ", " tumor ", " lidar "
+        ],
+        "segment & multimodal": [
+            " disease ", " cancer ", " medical ", " polyp ", " lesion ",
+            " mri ", " tumor ", " lidar "
+        ]
+    },
     "datetime": null,
     "output_directory": "outputs",
     "markdown_directory": "../../Notebook/arxiv",

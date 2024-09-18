@@ -92,6 +92,7 @@ DEFAULT_KEYWORDS = {
         "segment & vision language", "segment & vision-language"
     ]
 }
+DEFAULT_IGNORED: dict[str, list[str]] | None = None
 
 
 @lru_cache
@@ -118,6 +119,11 @@ class Configs:
             default_configs().get, 'keywords', DEFAULT_KEYWORDS
         ),
         metadata={"help": DOCUMENTS["keywords"]})
+    ignored: dict[str, list[str]] = field(
+        default_factory=partial(
+            default_configs().get, 'ignored', DEFAULT_IGNORED
+        )
+    )
     datetime: str = field(
         default=default_configs().get('datetime', None),
         metadata={"help": DOCUMENTS["datetime"]})
@@ -232,7 +238,8 @@ def search_and_parse(cfgs: Configs):
         if isinstance(cfgs.keywords, dict):
             save_by_keyword_groups(results, cfgs.keywords,
                                    cfgs.output_directory,
-                                   cfgs.markdown_directory)
+                                   cfgs.markdown_directory,
+                                   cfgs.ignored)
         else:
             save_by_keywords(results, cfgs.keyword_list,
                              cfgs.output_directory,
@@ -243,7 +250,7 @@ def search_and_parse(cfgs: Configs):
 
     if cfgs.translate and cfgs.model:
         if len(results) == 0:
-            logger.warn("No results found, skip translation.")
+            logger.warning("No results found, skip translation.")
             return
         agent = Agent(cfgs.model)
         logger.info(f"Executing translation task with {cfgs.model}.")
@@ -369,22 +376,31 @@ def convert_results_to_dict(results: list[Result]) -> list[dict]:
 def save_by_keyword_groups(results: list[Result],
                            keyword_groups: dict[str, list[str]],
                            output_directory: str,
-                           markdown_directory: str):
+                           markdown_directory: str,
+                           ignored_keywords: dict[str, list[str]] | None = None):
     logger.info(f"Saving by keyword groups: {keyword_groups.keys()}")
+    ignored_keywords = ignored_keywords or {}
     for group, keywords in keyword_groups.items():
         save_by_keyword_group(results, group, keywords,
-                              output_directory, markdown_directory)
+                              output_directory, markdown_directory,
+                              ignored_keywords.get(group, None))
 
 
 def save_by_keyword_group(results: list[Result],
                           group_name: str,
                           keywords: list[str],
                           output_directory: str,
-                          markdown_directory: str):
+                          markdown_directory: str,
+                          ignored_keywords: list[str] | None = None):
+    logger.info(f"Save with keywords: {keywords}, ignored: {ignored_keywords or ''}")
     filtered_results: list[Result] = []
     for _, keyword in enumerate(keywords):
         rs = filter_results_by_keyword(results, keyword)
-        filtered_results.extend(rs)
+        for r in rs:
+            if r not in filtered_results:
+                filtered_results.append(r)
+    if ignored_keywords:
+        filtered_results = ignore_by_keywords(filtered_results, ignored_keywords)
     paper_infos = [format_result_markdown(r) for r in filtered_results]
     paper_infos = "\n\n# Abstract\n" + "".join(paper_infos)
     jsonl = convert_results_to_dict(filtered_results)
@@ -398,6 +414,24 @@ def save_by_keyword_group(results: list[Result],
     with open(path, 'w', encoding="UTF-8") as fp:
         fp.writelines([format_result(r, i) for i, r in enumerate(filtered_results)])
     logger.info('DONE.')
+
+
+def ignore_by_keywords(results: list[Result], keywords: list[str]):
+    logger.info(f"Ignoring {keywords}")
+    for k in keywords:
+        results = _ignore_results(results, k)
+    return results
+
+
+def _ignore_results(results: list[Result], keyword: str):
+    filtered_results = list(
+        filter(
+            lambda r: (keyword not in r.summary.lower()
+                        and keyword not in r.title.lower()),
+            results
+        )
+    )
+    return filtered_results
 
 
 def filter_results_by_keyword(results: list[Result], keyword: str):
