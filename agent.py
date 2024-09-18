@@ -15,10 +15,10 @@ try:
     from zhipuai import ZhipuAI
     zhipu_api_key = os.environ.get("ZHIPU_API_KEY", None)
     if zhipu_api_key is None:
-        logger.warn(
+        logger.warning(
             "Set `ZHIPU_API_KEY` environment variable to use GLM series.")
 except ImportError as e:
-    logger.warn(f"Use `pip install zhipuai` to use GLM series.\n{e}")
+    logger.warning(f"Use `pip install zhipuai` to use GLM series.\n{e}")
 
 
 @dataclass

@@ -243,7 +243,7 @@ def search_and_parse(cfgs: Configs):
 
     if cfgs.translate and cfgs.model:
         if len(results) == 0:
-            logger.warn("No results found, skip translation.")
+            logger.warning("No results found, skip translation.")
             return
         agent = Agent(cfgs.model)
         logger.info(f"Executing translation task with {cfgs.model}.")
@@ -384,7 +384,9 @@ def save_by_keyword_group(results: list[Result],
     filtered_results: list[Result] = []
     for _, keyword in enumerate(keywords):
         rs = filter_results_by_keyword(results, keyword)
-        filtered_results.extend(rs)
+        for r in rs:
+            if r not in filtered_results:
+                filtered_results.append(r)
     paper_infos = [format_result_markdown(r) for r in filtered_results]
     paper_infos = "\n\n# Abstract\n" + "".join(paper_infos)
     jsonl = convert_results_to_dict(filtered_results)
