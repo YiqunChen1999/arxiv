@@ -6,11 +6,11 @@ from functools import lru_cache
 from dataclasses import dataclass, field
 
 import arxiv
-from logger import create_logger, setup_format
-from parsing import ArgumentParser
+from arxiver.utils.logging import create_logger, setup_format
+from arxiver.utils.parser import ArgumentParser
 
 
-logger = None
+logger = create_logger(__name__, auto_setup_fmt=True)
 
 
 META = """---
@@ -27,15 +27,15 @@ tags: {}
 OBSIDIAN_NAVIGATION = """
 ```dataviewjs
 let p = dv.pages(dv.current.file) // Retrieve pages with title "path/to/your/notes"
-		  .where(p => p.file.name == dv.current().file.name) // Filter out the current page
+          .where(p => p.file.name == dv.current().file.name) // Filter out the current page
           .sort(p => p.file.ctime) //sort pages by creation time
           .forEach(p => { //for each page
             dv.header(2, "Table of Contents"); // Display page name as header
             const cache = this.app.metadataCache.getCache(p.file.path);//get metadata cache for the page
-            
+
             if (cache) { // If cache exists
               const headings = cache.headings; // Get the headings from the cache
-              
+
               if (headings) { //if headings exist
                 const filteredHeadings = headings.slice(0) //Start from first heading
                   .filter(h => h.level <= 4) // Filter headings based on level (up to level 4)
@@ -44,18 +44,18 @@ let p = dv.pages(dv.current.file) // Retrieve pages with title "path/to/your/not
                    // let linkyHeading = "[[#" + h.heading + "]]";
     //Correct linking code
     let linkyHeading = "[[" + p.file.name + "#" + h.heading + "|" + h.heading + "]]";
-    
-         
+
+
                return indent + "- " + linkyHeading;
                   })
                   .join("\\n");// Join the formatted headings with newlines
-                
+
                 dv.el("div", filteredHeadings);// Display the formatted headings as a div
               }
             }
           });
 ```
-"""
+"""  # noqa
 
 TEMPLATE = """
 
@@ -259,7 +259,7 @@ def write_markdown_file(md_path: str, content: str):
 def _download(cfgs: Configs, result: arxiv.Result, filename: str):
     logger.info(f"Downloading paper to {cfgs.download_directory}")
     if osp.exists(osp.join(cfgs.download_directory, filename)):
-        filename = filename.replace(".pdf", f"{cfgs.version}.pdf")
+        filename = filename.replace(".pdf", f" @ {cfgs.version}.pdf")
         logger.warning(
             f"Paper exists, download the newest version. "
             f"Paper path: {osp.join(cfgs.download_directory, filename)}.")
@@ -346,7 +346,7 @@ def query_paper(cfgs: Configs) -> None | arxiv.Result:
 
 
 def parse_cfgs() -> Configs:
-    parser = ArgumentParser(Configs)
+    parser = ArgumentParser(Configs)  # type: ignore
     cfgs, *_ = parser.parse_args_into_dataclasses()
     return cfgs
 
