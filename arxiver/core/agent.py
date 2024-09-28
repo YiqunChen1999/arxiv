@@ -1,41 +1,29 @@
 
 import os
 from time import sleep
-from typing import Callable
 from dataclasses import dataclass
 
 from openai import OpenAI
+from openai.types.chat.chat_completion import ChatCompletion
 
-from arxiver.utils.logging import create_logger, setup_format
-from arxiver.utils.io import load_jsonl, save_jsonl
+from arxiver.utils.logging import create_logger
+from arxiver.utils.io import load_jsonl, save_jsonl, load_json
 
 
-logger = create_logger(__name__)
-setup_format()
+logger = create_logger(__name__, auto_setup_fmt=True)
 
 
 @dataclass
 class ModelConfig:
-    url: str = None
-    endpoint: str = None
-    client: Callable = None
-    model: str = None
-    api_key: str = None
-    compatible: bool = False
-    max_tokens: int = 8192
-    temperature: float = 0.95
-    top_p: float = 0.70
+    base_url: str = ""
+    endpoint: str = ""
+    model: str = ""
+    api_key: str = ""
+    model_kwargs: dict | None = None
 
     def __post_init__(self):
-        if self.url and isinstance(self.url, str) and self.endpoint is None:
-            self.url = self.url.rstrip('/')
-            self.endpoint = f"/{'/'.join(self.url.split('/')[-3:])}"
-        self.temperature = max(0, min(1, self.temperature))
-        self.top_p = max(0, min(1, self.top_p))
-
-    @property
-    def model_kwarg(self):
-        return {"temperature": self.temperature, "top_p": self.top_p}
+        if self.model_kwargs is None:
+            self.model_kwargs = {}
 
 
 @dataclass
@@ -49,38 +37,31 @@ class Message:
 
 @dataclass
 class History:
-    messages: list[Message] = None
+    messages: list[Message] | None = None
 
     def __post_init__(self):
         if self.messages is None:
             self.messages = []
 
     def append(self, role: str, content: str):
+        if self.messages is None:
+            self.messages = []
         self.messages.append(Message(role=role, content=content))
 
     def tolist(self):
-        return [m.todict() for m in self.messages]
-
-
-MODEL = {
-    "noset": ModelConfig(),
-    "zhipu-glm-4-flash": ModelConfig(
-        url="https://open.bigmodel.cn/api/paas/v4/chat/completions",
-        endpoint="/v4/chat/completions",
-        client=OpenAI, compatible=True, model="glm-4-flash",
-        api_key=os.environ.get("ZHIPU_API_KEY", None),
-    ),
-}
+        return [m.todict() for m in self.messages] if self.messages else []
 
 
 class Agent:
     def __init__(self, model: str):
-        if model not in MODEL.keys():
-            logger.error(f"No model named {model}")
-            model = "noset"
-        self.config = MODEL[model]
-        self.model = self.config.model
-        self.client = self.config.client(api_key=self.config.api_key)
+        path = __file__.replace("arxiver", "configs").replace(".py", ".json")
+        configs = load_json(path)
+        self.model = model
+        self.config = ModelConfig(**configs.get(model, {}))
+        self.client = OpenAI(
+            api_key=os.environ.get(self.config.api_key, None),
+            base_url=self.config.base_url,
+        )
         self.history = History()
 
     def append(self, role: str, content: str):
@@ -89,43 +70,33 @@ class Agent:
     def clear(self):
         self.history = History()
 
-    def complete(self,
-                 message: str,
-                 include_history: bool = False,
-                 stream: bool = False) -> str:
-        if isinstance(self.client, OpenAI):
-            return self.complete_by_zhipu(message, include_history, stream)
-
-    def complete_by_zhipu(self,
-                          message: str,
-                          include_history: bool = False,
-                          stream: bool = False,
-                          **kwargs) -> str:
-        logger.info(f"Completing by Zhipu AI ({self.model})")
+    def complete_single(self,
+                        message: str,
+                        include_history: bool = False,
+                        stream: bool = False,
+                        **kwargs) -> str:
+        logger.info(f"Completing by Zhipu AI ({self.config.model})")
         self.client: OpenAI
         messages = self.history.tolist() if include_history else []
         messages.append({"role": "user", "content": message})
-        model_kwarg = self.config.model_kwarg
+        model_kwarg = self.config.model_kwargs or {}
         model_kwarg.update(kwargs)
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
+        response: ChatCompletion = self.client.chat.completions.create(
+            messages=messages,  # type: ignore # openai handles this
+            model=self.config.model,
             stream=stream,
             **model_kwarg,
         )
-        response = response.choices[0].message.content
+        content = response.choices[0].message.content
+        if not isinstance(content, str):
+            raise ValueError(f"Invalid response content: {content}")
         self.history.append(role="user", content=message)
-        self.history.append(role="assistant", content=response)
-        return response
+        self.history.append(role="assistant", content=content)
+        return content
 
     def complete_batches(self, messages: list[str], **kwargs) -> list[str]:
-        if isinstance(self.client, OpenAI):
-            return self.complete_batches_by_zhipu(messages, **kwargs)
-
-    def complete_batches_by_zhipu(self, messages: list[str],
-                                  **kwargs) -> list[str]:
         os.makedirs("tmp", exist_ok=True)
-        model_kwarg = self.config.model_kwarg
+        model_kwarg = self.config.model_kwargs or {}
         model_kwarg.update(kwargs)
         batch_items = create_batch_items(
             messages, self.config.endpoint, self.config.model, **model_kwarg)
@@ -137,12 +108,12 @@ class Agent:
         logger.info(f"Create task with id {task_file.id}")
         batch_task = self.client.batches.create(
             input_file_id=task_file.id,
-            endpoint=self.config.endpoint,
+            endpoint=self.config.endpoint,  # type: ignore
             completion_window="24h",
-            metadata={"description": "complete batches by zhipu"},
+            metadata={"description": f"complete batches by {self.model}"},
         )
         while True:
-            sleep(5)
+            sleep(30)
             job = self.client.batches.retrieve(batch_task.id)
             if job.status in ("validating", "in_progress", "finalizing"):
                 logger.info(f"Completion status: {job.status}")
@@ -151,7 +122,7 @@ class Agent:
                 logger.info(
                     f"Complete batches task exists with status: {job.status}.")
                 break
-        if job.status not in ("completed",):
+        if job.status not in ("completed",) or not job.output_file_id:
             return []
         content = self.client.files.content(job.output_file_id)
         content.write_to_file("tmp/.agent.batch.out.jsonl")
@@ -178,15 +149,16 @@ class Agent:
         return responses
 
 
-def create_batch_items(messages: list[str], url: str, model: str,
+def create_batch_items(messages: list[str], endpoint: str, model: str,
                        **request_kwargs) -> list[dict]:
     items = []
     nzfill = max(10, len(str(len(messages) - 1)))
+    logger.info(f"Creating batch with {len(messages)} items")
     for idx, msg in enumerate(messages):
         request_item = {
             "custom_id": str(idx).zfill(nzfill),
             "method": "POST",
-            "url": url, 
+            "url": endpoint,
             "body": {
                 "model": model,
                 "messages": [
@@ -201,7 +173,7 @@ def create_batch_items(messages: list[str], url: str, model: str,
 
 if __name__ == "__main__":
     agent = Agent(model="zhipu-glm-4-flash")
-    response = agent.complete(
+    response = agent.complete_single(
         ("Translate the following text into Chinese: "
          "'An apple a day keeps doctors away'.")
     )

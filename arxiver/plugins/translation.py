@@ -1,21 +1,54 @@
 
-from arxiver.plugins.base import BasePlugin
-from arxiver.models import Result
-from arxiver.agent import Agent
+from dataclasses import dataclass
+
+from arxiver.utils.logging import create_logger
+from arxiver.base.plugin import BasePlugin, BasePluginData, GlobalPluginData
+from arxiver.base.result import Result
+from arxiver.core.agent import Agent
+
+
+logger = create_logger(__name__)
+
+
+def plugin_name():
+    return "Translator"
+
+
+def translation_instruction():
+    prompt = (
+        "Directly translate the given text into Chinese. Don't output "
+        "irrelevant contexts."
+    )
+    return prompt
+
+
+@dataclass
+class TranslatorData(BasePluginData):
+    plugin_name: str = plugin_name()
+    model: str = ""
+    chinese_summary: str = ""
+
 
 class Translator(BasePlugin):
     def __init__(self, model: str):
         self.agent = Agent(model)
 
-    def process(self, results: list[Result]) -> list[Result]:
+    def process(self,
+                results: list[Result],
+                global_plugin_data: GlobalPluginData) -> list[Result]:
         return self.translate_batch(results)
 
     def translate_batch(self, results: list[Result]) -> list[Result]:
         summaries = [r.summary for r in results]
+        logger.info(f"Translating {len(summaries)} summaries...")
         translations = self.agent.complete_batches([
-            f"Translate the following text into Chinese:\n\n{summary}"
-            for summary in summaries
+            f"Given the following text:\n\n{s}\n\n{translation_instruction()}"
+            for s in summaries
         ])
         for result, translation in zip(results, translations):
-            result.chinese_summary = translation
+            plugin = result.local_plugin_data.get(plugin_name(), None)
+            if plugin is None:
+                result.add_plugin_data(TranslatorData(model=self.agent.model))
+            plugin: TranslatorData = result.local_plugin_data[plugin_name()]
+            plugin.chinese_summary = translation
         return results

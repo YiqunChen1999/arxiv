@@ -1,0 +1,14 @@
+{
+    "noset": {},
+    "zhipuai-glm-4-flash": {
+        "base_url": "https://open.bigmodel.cn/api/paas/v4/",
+        "endpoint": "/v4/chat/completions",
+        "model": "glm-4-flash",
+        "api_key": "ZHIPUAI_APIKEY",
+        "model_kwargs": {
+            "max_tokens": 8182,
+            "temperature": 0.5,
+            "top_p": 0.9
+        }
+    }
+}

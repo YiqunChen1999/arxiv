@@ -132,7 +132,7 @@ def setup_format(formatter: Formatter | None = None):
 def create_logger(name: str | None = None,
                   save_root: str | None = None,
                   file_name: str | None = None,
-                  auto_setup_fmt: bool = True):
+                  auto_setup_fmt: bool = False):
     if name is None:
         name = __name__.split(".")[0]
     logger = Logger(name)

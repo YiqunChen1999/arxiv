@@ -1,64 +1,231 @@
+
 import os
-import json
-from arxiver.plugins.base import BasePlugin
-from arxiver.models import Result
+import os.path as osp
+from dataclasses import dataclass
+from arxiver.utils.logging import create_logger
+from arxiver.base.plugin import BasePlugin, BasePluginData, GlobalPluginData
+from arxiver.base.result import Result
+from arxiver.plugins.translation import TranslatorData
+from arxiver.plugins.github_link_parser import GitHubLinkParserData
+from arxiver.plugins.markdown_table_maker import (
+    MarkdownTableMaker, MarkdownTableMakerData
+)
+from arxiver.utils.io import save_jsonl
+
+
+logger = create_logger(__name__)
+
+
+def plugin_name():
+    return "ResultSaver"
+
+
+OBSIDIAN_NAVIGATION = """
+```dataviewjs
+const folder = dv.current().file.folder;
+
+let files = (
+    dv.pages(`"${folder}"`)
+    .where(p => !p.file.name.includes("_Navigation"))
+    .sort(p => p.file.name)
+    .map(p => [
+        p.file.link + " (" + p.counts.toString() + ")"
+    ]))
+
+let num_cols = 3
+let num_items = files.length
+let reshaped = []
+
+for (let i=0; i < num_items; i += num_cols){
+    reshaped.push(files.slice(i, i+num_cols));
+}
+
+dv.table(["#_hide_header ", "#_hide_header ", "#_hide_header "],
+    reshaped
+);
+```
+
+"""
+
+
+@dataclass
+class ResultSaverData(BasePluginData):
+    plugin_name: str = "ResultSaver"
+    output_directory: str = ""
+    markdown_directory: str = ""
+
 
 class ResultSaver(BasePlugin):
-    def __init__(self, output_directory: str, markdown_directory: str):
+    def __init__(self,
+                 output_directory: str,
+                 markdown_directory: str,
+                 keywords: dict[str, list[str]]):
         self.output_directory = output_directory
         self.markdown_directory = markdown_directory
+        self.keywords = keywords
         os.makedirs(self.output_directory, exist_ok=True)
         os.makedirs(self.markdown_directory, exist_ok=True)
 
-    def process(self, results: list[Result], markdown_table: str):
+    def process(self,
+                results: list[Result],
+                global_plugin_data: GlobalPluginData):
+        markdown_table = global_plugin_data.data.get("MarkdownTableMaker", "")
+        logger.info(f"Saving {len(results)} results...")
         self.save_results(results, markdown_table)
+        return results
 
     def save_results(self, results: list[Result], markdown_table: str):
         self.save_jsonl(results)
-        self.save_markdown(markdown_table)
+        self.save_markdown_file(results, markdown_table)
         self.save_text(results)
+        self.save_by_keywords(results)
+        self.make_navigation_list()
 
     def save_jsonl(self, results: list[Result]):
         path = os.path.join(self.output_directory, 'results.jsonl')
-        with open(path, 'w') as fp:
-            for result in results:
-                json.dump(result.__dict__, fp)
-                fp.write('\n')
+        save_jsonl(path, [r.todict() for r in results])
 
-    def save_markdown(self, markdown_table: str):
+    def save_markdown_file(self, results: list[Result], markdown_table: str):
+        if not markdown_table:
+            return
         path = os.path.join(self.markdown_directory, 'papers.md')
+        logger.info(f"Saving markdown table to {path}")
         with open(path, 'w') as fp:
+            fp.write("---\n"
+                     + f"counts: {len(results)}\n"
+                     + "---\n\n")
             fp.write(markdown_table)
 
     def save_text(self, results: list[Result]):
         path = os.path.join(self.output_directory, 'papers.txt')
+        logger.info(f"Saving text to {path}")
         with open(path, 'w') as fp:
             for i, result in enumerate(results):
                 fp.write(self.format_result(result, i))
 
-    def format_result(self, result: Result, index: int) -> str:
-        return f"""={'='*63}
- - INDEX: {str(index).zfill(4)}
- - title: {result.title}
- - publish date: {result.published}
- - updated date: {result.updated}
- - authors: {', '.join(result.authors)}
- - primary category: {result.primary_category}
- - categories: {result.categories}
- - journal reference: {result.journal_ref}
- - code link: {result.code_link}
- - paper pdf link: {result.pdf_url}
- - paper abstract link: {result.entry_id}
- - doi: {result.doi}
- - comment: {result.comment}
- - abstract: {result.summary}
+    def format_result(self, result: Result, index: int | None = None) -> str:
+        authors = [r.name for r in result.authors]
+        code_link_plugin: GitHubLinkParserData | None = (
+            result.local_plugin_data.get(
+                GitHubLinkParserData.plugin_name, None
+            )
+        )
+        code_link: str = (
+            code_link_plugin.code_link if code_link_plugin else "N/A"
+        )
+        translation_plugin: TranslatorData | None = (
+            result.local_plugin_data.get(TranslatorData.plugin_name, None)
+        )
+        chinese_summary: str = (
+            translation_plugin.chinese_summary if translation_plugin else "N/A"
+        )
+        string = f"""
+## {result.title}
+- publish date: {result.published}
+- updated date: {result.updated}
+- authors: {', '.join(authors)}
+- primary category: {result.primary_category}
+- categories: {result.categories}
+- code link: {code_link}
+- paper pdf link: {result.pdf_url}
+- paper abstract link: {result.entry_id}
+- doi: {result.doi}
+- comment: {result.comment}
+- journal reference: {result.journal_ref}
 
- - Chinese abstract: {result.chinese_summary}
+**ABSTRACT**
+{result.summary}
+
+**Chinese Abstract**
+{chinese_summary}
 
 """
+        if index is not None:
+            string = f"Index: {index}\n" + string
+        return string
 
-    def save_translated_results(self, results: list[Result]):
-        path = os.path.join(self.output_directory, 'translated_papers.txt')
+    def save_by_keywords(self, results: list[Result]):
+        for keyword in self.keywords.keys():
+            self.save_by_keyword(results, keyword)
+
+    def save_by_keyword(self, results: list[Result], keyword: str):
+        filtered_results: list[Result] = []
+        for _, kwd in enumerate(self.keywords[keyword]):
+            filtered_results.extend(filter_results_by_keyword(results, kwd))
+        filtered_results = deduplicate(filtered_results)
+        if not filtered_results:
+            logger.info(f"No results found for keyword: {keyword}")
+            return
+        logger.info(
+            f"Saving {len(filtered_results)} results for keyword: {keyword}"
+        )
+        paper_infos = [self.format_result(r) for r in filtered_results]
+        paper_infos = "\n\n# Abstract\n" + "".join(paper_infos)
+        markdown_plugin = MarkdownTableMaker()
+        plugin_data = GlobalPluginData()
+        markdown_plugin(filtered_results, plugin_data)
+        table: str = plugin_data.data[MarkdownTableMakerData.plugin_name]
+        content: str = ("---\n"
+                        + f"counts: {len(filtered_results)}\n"
+                        + "---\n\n"
+                        + table
+                        + "\n\n"
+                        + paper_infos)
+        path = osp.join(self.markdown_directory, f'papers @ {keyword}.md')
+        logger.info(f"Saving markdown file to {path}")
         with open(path, 'w') as fp:
-            for i, result in enumerate(results):
-                fp.write(self.format_result(result, i))
+            fp.write(content)
+
+    def make_navigation_list(self):
+        path = osp.join(self.markdown_directory, "_Navigation.md")
+        osp.basename(self.markdown_directory)
+        date = osp.basename(self.markdown_directory)
+        date = date[:4] + '-' + date[4:6] + '-' + date[6:]
+        logger.info(f"Making navigation list at {path}")
+        with open(path, 'w') as fp:
+            fp.write('---\n')
+            fp.write(f'date: {date}\n')
+            fp.write('---\n\n')
+            fp.write(OBSIDIAN_NAVIGATION)
+        return path
+
+
+def deduplicate(results: list[Result]) -> list[Result]:
+    seen = set()
+    deduplicated = []
+    for result in results:
+        if result.entry_id not in seen:
+            seen.add(result.entry_id)
+            deduplicated.append(result)
+    return deduplicated
+
+
+def filter_results_by_keyword(results: list[Result], keyword: str):
+    if '&' in keyword:
+        return _filter_results_by_and_logic(results, keyword)
+    return _filter_results(results, keyword)
+
+
+def _filter_results_by_and_logic(results: list[Result], keyword: str):
+    assert '&' in keyword
+    keywords = keyword.split('&')
+    keywords = [kw.strip() for kw in keywords]
+    filtered_results = list(
+        filter(
+            lambda r: all(kw in r.summary.lower() or kw in r.title.lower()
+                          for kw in keywords),
+            results
+        )
+    )
+    return filtered_results
+
+
+def _filter_results(results: list[Result], keyword: str):
+    filtered_results = list(
+        filter(
+            lambda r: (keyword in r.summary.lower()
+                       or keyword in r.title.lower()),
+            results
+        )
+    )
+    return filtered_results
