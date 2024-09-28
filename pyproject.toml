@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arxiver"
+version = "0.0.1"
+authors = [
+    {name = "Yiqun Chen", email="chenyiqun2021@ia.ac.cn"},
+]
+description = "Sequence Modeling for Unified Segmentation."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+]
+dependencies = [
+    "arxiv",
+]
+
+[project.optional-dependencies]
+train = ["deepspeed>=0.12.6", "ninja", "wandb"]
+build = ["build", "twine"]
+
+[project.urls]
+homepage = "https://github.com/yiqunchen1999/dev-arxiver"
+repository = "https://github.com/yiqunchen1999/dev-arxiver"
+documentation = "https://github.com/yiqunchen1999/dev-arxiver"
+
+[tool.setuptools.packages.find]
+exclude = ["assets*", "benchmark*", "docs", "dist*", "playground*",
+           "scripts*", "tests*", "./cache", "./data", "./models",
+           "./runs", "./outputs", "./tmp", "./temp"]
+
+[tool.wheel]
+where = ["."]
+exclude = ["assets*", "benchmark*", "docs", "dist*", "playground*", "scripts*", "tests*"]
+
+[tool.setuptools.package-data]
+"arxiver" = ["py.typed"]
+
+[tool.pyright]
+include = ["arxiver", "eval"]
+exclude = ["cache", "tests", "docs", "build", "dist", ".pytest_cache",
+           ".git", ".github", ".ruff", "data", "wandb", "logs", "checkpoints",
+           "runs", "results", "predictions", "submissions", "tmp",
+           "arxiver/utils/parser.py"]

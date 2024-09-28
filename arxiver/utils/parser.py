@@ -69,7 +69,7 @@ def HfArg(
     metadata: dict = None,
     **kwargs,
 ) -> dataclasses.Field:
-    """Argument helper enabling a concise syntax to create dataclass fields for parsing with `ArgumentParser`.
+    """Argument helper enabling a concise syntax to create dataclass fields for parsing with `HfArgumentParser`.
 
     Example comparing the use of `HfArg` and `dataclasses.field`:
     ```
@@ -345,7 +345,7 @@ class ArgumentParser(ArgumentParser):
             return (*outputs, remaining_args)
         else:
             if remaining_args:
-                raise ValueError(f"Some specified arguments are not used by the ArgumentParser: {remaining_args}")
+                raise ValueError(f"Some specified arguments are not used by the HfArgumentParser: {remaining_args}")
 
             return (*outputs,)
 
@@ -374,7 +374,7 @@ class ArgumentParser(ArgumentParser):
             obj = dtype(**inputs)
             outputs.append(obj)
         if not allow_extra_keys and unused_keys:
-            raise ValueError(f"Some keys are not used by the ArgumentParser: {sorted(unused_keys)}")
+            raise ValueError(f"Some keys are not used by the HfArgumentParser: {sorted(unused_keys)}")
         return tuple(outputs)
 
     def parse_json_file(

@@ -1,10 +1,12 @@
 
 import os
+import sys
 import logging
 import logging.config
 from datetime import datetime
 from logging import StreamHandler, FileHandler, Formatter, LoggerAdapter
 from functools import lru_cache
+from contextlib import contextmanager
 from typing import Any, Callable
 try:
     from accelerate import PartialState  # type: ignore
@@ -62,12 +64,11 @@ class Logger:
             name = __name__.split(".")[0]
         self.logger = LoggerAdapter(logging.getLogger(name), extra={})
         if ACCELERATE_AVAILABLE:
-            self.state = PartialState()
+            self.state = PartialState()  # type: ignore
         else:
             self.state = None
         self.debug = self.logger.debug
         self.info = self.logger.info
-        self.warn = self.logger.warn
         self.warning = self.logger.warning
         self.error = self.logger.error
         self.critical = self.logger.critical
@@ -130,7 +131,8 @@ def setup_format(formatter: Formatter | None = None):
 
 def create_logger(name: str | None = None,
                   save_root: str | None = None,
-                  file_name: str | None = None):
+                  file_name: str | None = None,
+                  auto_setup_fmt: bool = False):
     if name is None:
         name = __name__.split(".")[0]
     logger = Logger(name)
@@ -144,13 +146,58 @@ def create_logger(name: str | None = None,
         logger.info(f"Logger messages will be saved to {save_path}")
         setup_file_handler(save_path)
     logger.info(f"Logger {name} is created.")
+    if auto_setup_fmt:
+        setup_format()
     return logger
 
 
 def setup_libs_format():
     try:
-        from transformers.utils.logging import _get_library_root_logger  # type: ignore
+        from transformers.utils.logging import _get_library_root_logger  # type: ignore # noqa
     except ImportError:
         return
     logger = _get_library_root_logger()
     logger.propagate = True
+
+
+@contextmanager
+def disable_handlers(logger_name: str | None = None,
+                     handler_types: tuple[logging.Handler] | None = None):
+    logger = logging.getLogger(logger_name)
+    if handler_types is None:
+        handler_types = tuple()
+    # Store the original states and disable specified handlers
+    handler_levels: list[tuple[logging.Handler, int]] = []
+    for handler in logger.handlers:
+        if isinstance(handler, handler_types):  # type: ignore
+            handler_levels.append((handler, handler.level))
+            # Set to a level higher than CRITICAL
+            handler.setLevel(logging.CRITICAL + 1)
+
+    try:
+        yield  # This is where the wrapped code will execute
+    finally:
+        # Restore the original states
+        for handler, level in handler_levels:
+            handler.setLevel(level)
+
+
+@contextmanager
+def disable_console_logging(logger_name: str | None = None):
+    logger = logging.getLogger(logger_name)
+    # Store the original states and disable console handlers
+    handler_levels: list[tuple[logging.Handler, int]] = []
+    for handler in logger.handlers:
+        if (
+                isinstance(handler, logging.StreamHandler)
+                and handler.stream in (sys.stdout, sys.stderr)):
+            handler_levels.append((handler, handler.level))
+            # Set to a level higher than CRITICAL
+            handler.setLevel(logging.CRITICAL + 1)
+
+    try:
+        yield  # This is where the wrapped code will execute
+    finally:
+        # Restore the original states
+        for handler, level in handler_levels:
+            handler.setLevel(level)

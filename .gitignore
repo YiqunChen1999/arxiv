@@ -5,3 +5,5 @@ configs.json
 *__pycache__*
 tmp
 .DS_Store
+**.egg-info
+.DS_Store
