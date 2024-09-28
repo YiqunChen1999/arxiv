@@ -37,7 +37,10 @@ def search_and_parse(cfgs: Configs):
         # first, inspect the arguments of the plugin
         # find the argument from cfgs
         args = prepare_plugins_args_from_configs(cfgs, plugin_names, cls)
-        logger.info(f"Running plugin {cls.__name__} with args {args}")
+        str_args = "\n".join([f">>>> {k}: {v}" for k, v in args.items()])
+        logger.info(
+            f"Running plugin {cls.__name__} with args\n{str_args}"
+        )
         plugin: BasePlugin = cls(**args)
         results = plugin(results, global_plugin_data)
 

@@ -1,23 +1,6 @@
 {
     "categories": "(cat:cs.CV OR cat:cs.AI OR cat:cs.LG)",
     "num_retries": 10,
-    "keywords": {
-        "detect": ["detect", "detection"],
-        "diffusion": ["diffusion"],
-        "segment": ["segment", "segmentation"],
-        "vision": ["vision", "visual"],
-        "vision-language": ["vision-language", "vision language"],
-        "multimodal": [
-            "multimodal", "multi-modal", "multi modal", "vlm", "mllm",
-            "vision language", "vision-language"
-        ],
-        "segment & vision": ["segment & vision", "segment & visual"],
-        "segment & multimodal": [
-            "segment & multimodal", "segment & multi-modal",
-            "segment & multi modal", "segment & vlm", "segment & mllm",
-            "segment & vision language", "segment & vision-language"
-        ]
-    },
     "datetime": null,
     "output_directory": "outputs",
     "markdown_directory": "../../Notebook/arxiv",
@@ -27,6 +10,6 @@
     "batch_mode": false,
     "plugins": [
         "GitHubLinkParser", "MarkdownTableMaker",
-        "ResultSaver", "Translator", "ResultSaver"
+        "ResultSaver"
     ]
 }

@@ -2,7 +2,6 @@
 import os
 import datetime
 import os.path as osp
-from functools import partial
 
 from dataclasses import dataclass, field
 from arxiver.utils.io import load_json
@@ -20,11 +19,6 @@ class Configs:
             'categories', '(cat:cs.CV OR cat:cs.AI OR cat:cs.LG)'),
         metadata={"help": f"See the field of {PATH}"})
     num_retries: int = field(default=DEFAULT.get('num_retries', 10))
-    keywords: dict[str, list[str]] = field(
-        default_factory=partial(
-            DEFAULT.get, 'keywords', {}
-        ),
-        metadata={"help": f"See the field of {PATH}"})
     datetime: str = field(
         default=DEFAULT.get('datetime', None),
         metadata={"help": f"See the field of {PATH}"})

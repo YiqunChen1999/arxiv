@@ -59,10 +59,12 @@ class ResultSaver(BasePlugin):
     def __init__(self,
                  output_directory: str,
                  markdown_directory: str,
-                 keywords: dict[str, list[str]]):
+                 keywords: dict[str, list[str]] | None = None,
+                 ignorance: dict[str, list[str]] | None = None):
         self.output_directory = output_directory
         self.markdown_directory = markdown_directory
-        self.keywords = keywords
+        self.keywords = keywords or {}
+        self.ignorance = ignorance or {}
         os.makedirs(self.output_directory, exist_ok=True)
         os.makedirs(self.markdown_directory, exist_ok=True)
 
@@ -149,10 +151,16 @@ class ResultSaver(BasePlugin):
             self.save_by_keyword(results, keyword)
 
     def save_by_keyword(self, results: list[Result], keyword: str):
+        logger.info(
+            f"Filtering by keyword: {keyword}: {self.keywords[keyword]}"
+        )
         filtered_results: list[Result] = []
         for _, kwd in enumerate(self.keywords[keyword]):
             filtered_results.extend(filter_results_by_keyword(results, kwd))
         filtered_results = deduplicate(filtered_results)
+        filtered_results = ignore_by_keywords_list(
+            filtered_results, self.ignorance[keyword]
+        )
         if not filtered_results:
             logger.info(f"No results found for keyword: {keyword}")
             return
@@ -225,6 +233,24 @@ def _filter_results(results: list[Result], keyword: str):
         filter(
             lambda r: (keyword in r.summary.lower()
                        or keyword in r.title.lower()),
+            results
+        )
+    )
+    return filtered_results
+
+
+def ignore_by_keywords_list(results: list[Result], keywords: list[str]):
+    logger.info(f"Ignoring {keywords}")
+    for k in keywords:
+        results = _ignore_results(results, k)
+    return results
+
+
+def _ignore_results(results: list[Result], keyword: str):
+    filtered_results = list(
+        filter(
+            lambda r: (keyword not in r.summary.lower()
+                       and keyword not in r.title.lower()),
             results
         )
     )

@@ -1,6 +1,4 @@
 {
-    "categories": "(cat:cs.CV OR cat:cs.AI OR cat:cs.LG)",
-    "num_retries": 10,
     "keywords": {
         "detect": ["detect", "detection"],
         "diffusion": ["diffusion"],
@@ -18,7 +16,7 @@
             "segment & vision language", "segment & vision-language"
         ]
     },
-    "ignored": {
+    "ignorance": {
         "detect": [
             " disease ", " cancer ", " medical ", " polyp ", " lesion ",
             " mri ", " tumor ", " lidar "
@@ -51,9 +49,5 @@
             " disease ", " cancer ", " medical ", " polyp ", " lesion ",
             " mri ", " tumor ", " lidar "
         ]
-    },
-    "datetime": null,
-    "output_directory": "outputs",
-    "markdown_directory": "../../Notebook/arxiv",
-    "query": null
+    }
 }
