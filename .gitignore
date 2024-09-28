@@ -4,3 +4,4 @@ configs.json
 .vscode
 *__pycache__*
 tmp
+.DS_Store

@@ -1,76 +1,69 @@
 
-# python download.py \
-#     --markdown_subfolder "Vision-Language" \
-#     --journal "arxiv" \
-#     --link https://arxiv.org/abs/2407.20756 \
-#     --tags "vision-language,synthetic,data" \
-#     --code_link https://github.com/starriver030515/SynthVLM
-
-# python download.py \
-#     --markdown_subfolder "NLP" \
-#     --journal "arxiv" \
-#     --link https://arxiv.org/abs/2307.11088 \
-#     --tags "benchmark,evaluation" \
-#     --code_link https://github.com/OpenLMLab/LEval
-
-# python download.py \
-#     --markdown_subfolder "Vision-Language" \
-#     --journal "arxiv" \
-#     --link https://arxiv.org/abs/2406.13642 \
-#     --tags "vision-language,robot"  \
-#     --code_link https://github.com/BAAI-DCAI/SpatialBot
-
-# python download.py \
-#     --markdown_subfolder "Vision-Language" \
-#     --journal "arxiv" \
-#     --link https://arxiv.org/abs/2407.07053 \
-#     --tags "synthetic,data,vision-language" \
-#     --code_link https://github.com/zwq2018/Multi-modal-Self-instruct
-
-# python download.py \
-#     --markdown_subfolder "NLP" \
-#     --journal "arxiv" \
-#     --link https://arxiv.org/abs/2407.21787 \
-#     --tags "insight"
-
-# python download.py \
-#     --markdown_subfolder "NLP" \
-#     --journal "arxiv" \
-#     --link https://arxiv.org/abs/2310.19240 \
-#     --tags "benchmark" \
-#     --code_link https://github.com/KwanWaiChung/M4LE
-
-# python download.py \
-#     --markdown_subfolder "NLP" \
-#     --journal "ACL'24" \
-#     --link https://arxiv.org/abs/2402.00159 \
-#     --tags "dataset" \
-#     --code_link https://github.com/allenai/dolma
-
-# python download.py \
-#     --markdown_subfolder "NLP" \
-#     --journal "arxiv" \
-#     --link https://arxiv.org/abs/2406.15126 \
-#     --tags "survey,synthetic,data,evaluation"
-
-# python download.py \
-#     --markdown_subfolder "Vision-Language" \
-#     --journal "arxiv" \
-#     --link https://arxiv.org/abs/2408.15205 \
-#     --tags "vision-language,segmentation" \
-#     --code_link https://lwpyh.github.io/ProMaC/
-
-# python download.py \
-#     --markdown_subfolder "Vision" \
-#     --journal "ECCV'24" \
-#     --link https://arxiv.org/abs/2408.15201 \
-#     --tags "insight"
+python download.py \
+    --markdown_subfolder "Vision" \
+    --journal "arxiv" \
+    --link 1712.09913 \
+    --tags "insight"
 
 # python download.py \
 #     --markdown_subfolder "Vision" \
 #     --journal "arxiv" \
-#     --link https://arxiv.org/abs/2408.15178 \
-#     --tags "survey"
+#     --link 2409.10389v1 \
+#     --tags "few-shot,segmentation"
+
+# python download.py \
+#     --markdown_subfolder "Vision" \
+#     --journal "arxiv" \
+#     --link 2403.09307v3 \
+#     --tags "segmentation,foundation"
+
+# python download.py \
+#     --markdown_subfolder "Vision" \
+#     --journal "arxiv" \
+#     --link 2409.08516v1 \
+#     --tags "segmentatin,incremental"
+
+# python download.py \
+#     --markdown_subfolder "Vision-Language" \
+#     --journal "arxiv" \
+#     --link 2409.08468v1 \
+#     --tags "vision-language,open-vocabulary,segmentation"
+
+# python download.py \
+#     --markdown_subfolder "Vision" \
+#     --journal "TPAMI'24" \
+#     --link 2311.13254 \
+#     --tags "domain,segmentation"
+
+# python download.py \
+#     --markdown_subfolder "Vision" \
+#     --journal "arxiv" \
+#     --link 2409.06002v2 \
+#     --tags "augmentation,segmentation"
+
+# python download.py \
+#     --markdown_subfolder "Vision-Language" \
+#     --journal "arxiv" \
+#     --link 2409.06809 \
+#     --tags "CLIP"
+
+# python download.py \
+#     --markdown_subfolder "Vision-Language" \
+#     --journal "arxiv" \
+#     --link 2409.06579 \
+#     --tags "vision-language,CLIP,interpretability"
+
+# python download.py \
+#     --markdown_subfolder "Vision" \
+#     --journal "arxiv" \
+#     --link 2409.06424 \
+#     --tags "segmentation"
+
+# python download.py \
+#     --markdown_subfolder "Vision" \
+#     --journal "arxiv" \
+#     --link 2409.06305 \
+#     --tags "few-shot,segmentation,foundation"
 
 # python download.py \
 #     --markdown_subfolder "Vision" \
@@ -110,11 +103,11 @@
 #     --link https://arxiv.org/abs/2405.19047 \
 #     --tags "RL"
 
-python download.py \
-    --markdown_subfolder "Vision-Language" \
-    --journal "TPAMI'24" \
-    --link 2304.07547 \
-    --tags "segmentation,open-vocabulary,vision-language"
+# python download.py \
+#     --markdown_subfolder "Vision-Language" \
+#     --journal "TPAMI'24" \
+#     --link 2304.07547 \
+#     --tags "segmentation,open-vocabulary,vision-language"
 
 # python download.py \
 #     --markdown_subfolder "Vision-Language" \
