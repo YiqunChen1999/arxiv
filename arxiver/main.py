@@ -45,17 +45,19 @@ def search_and_parse(cfgs: Configs):
 def prepare_plugins_args_from_configs(cfgs, plugin_names: list[str], cls):
     signature = inspect.signature(cls)
     args = {}
+    cfg_path = (
+        get_class_file_path(cls)
+        .replace("py", "json")
+        .replace("arxiver", "configs")
+    )
+    plugin_config = {}
+    if os.path.exists(cfg_path):
+        plugin_config = load_json(cfg_path)
     for name, param in signature.parameters.items():
-        cfg_path = (
-                get_class_file_path(cls)
-                .replace("py", "json")
-                .replace("plugins", "configs")
-            )
-        plugin_config = {}
-        if os.path.exists(cfg_path):
-            plugin_config = load_json(cfg_path)
-        if name in plugin_config.keys() or name in cfgs.__dict__:
+        if name in cfgs.__dict__:
             args[name] = cfgs.__dict__[name]
+        elif name in plugin_config.keys():
+            args[name] = plugin_config[name]
     verify_plugin_dependencies(plugin_names, cls, args)
     return args
 

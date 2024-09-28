@@ -75,7 +75,7 @@ class Agent:
                         include_history: bool = False,
                         stream: bool = False,
                         **kwargs) -> str:
-        logger.info(f"Completing by Zhipu AI ({self.config.model})")
+        logger.info(f"Completing by {self.config.model}")
         self.client: OpenAI
         messages = self.history.tolist() if include_history else []
         messages.append({"role": "user", "content": message})
