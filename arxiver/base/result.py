@@ -6,6 +6,12 @@ from arxiver.base.plugin import BasePluginData
 
 
 class Result(arxiv.Result):
+    fields = (
+        "entry_id", "updated", "published", "title", "authors", "summary",
+        "comment", "journal_ref", "doi", "primary_category", "categories",
+        "links", "pdf_url",
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.local_plugin_data = {}
@@ -32,8 +38,17 @@ class Result(arxiv.Result):
         return result
 
     def todict(self):
+        links = [
+            {
+                "href": ln.href,
+                "title": ln.title,
+                "rel": ln.rel,
+                "content_type": ln.content_type,
+            } for ln in self.links
+        ]
         return {
             "entry_id": self.entry_id,
+            "pdf_url": self.pdf_url,
             "updated": self.updated.strftime("%Y-%m-%d, %H:%M:%S"),
             "published": self.published.strftime("%Y-%m-%d, %H:%M:%S"),
             "title": self.title,
@@ -44,7 +59,7 @@ class Result(arxiv.Result):
             "doi": self.doi,
             "primary_category": self.primary_category,
             "categories": self.categories,
-            "links": [ln.href for ln in self.links],
+            "links": links,
             "local_plugin_data": {
                 plugin_name: asdict(plugin_data)
                 for plugin_name, plugin_data in self.local_plugin_data.items()

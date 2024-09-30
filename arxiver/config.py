@@ -25,8 +25,15 @@ class Configs:
     output_directory: str = field(
         default=DEFAULT.get('output_directory', 'outputs'),
         metadata={"help": f"See the field of {PATH}"})
+    paper_note_folder: str = field(
+        default=DEFAULT.get('paper_note_folder', 'notes'),
+        metadata={"help": f"See the field of {PATH}"}
+    )
     markdown_directory: str = field(
         default=DEFAULT.get('markdown_directory', 'markdown'),
+        metadata={"help": f"See the field of {PATH}"})
+    download_directory: str = field(
+        default=DEFAULT.get('download_directory', 'download'),
         metadata={"help": f"See the field of {PATH}"})
     query: str = field(
         default=DEFAULT.get('query', ""),

@@ -3,13 +3,18 @@
     "num_retries": 10,
     "datetime": null,
     "output_directory": "outputs",
+    "paper_note_folder": "../../Notebook/论文笔记",
     "markdown_directory": "../../Notebook/arxiv",
+    "download_directory": "../../Papers",
     "query": "",
     "translate": false,
     "model": "",
     "batch_mode": false,
+    ".plugins": [
+        "ArxivParser", "GitHubLinkParser", "MarkdownTableMaker",
+        "DownloadInformationCollector", "ResultSaver"
+    ],
     "plugins": [
-        "GitHubLinkParser", "MarkdownTableMaker",
-        "ResultSaver"
+        "ResultsLoader", "Downloader"
     ]
 }

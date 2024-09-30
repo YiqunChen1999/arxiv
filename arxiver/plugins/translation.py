@@ -27,6 +27,10 @@ class TranslatorData(BasePluginData):
     plugin_name: str = plugin_name()
     model: str = ""
     chinese_summary: str = ""
+    save_as_item: bool = True
+
+    def string_for_saving(self, *args, **kwargs) -> str:
+        return f"**CHINESE ABSTRACT**\n{self.chinese_summary}"
 
 
 class Translator(BasePlugin):
@@ -54,6 +58,9 @@ class Translator(BasePlugin):
             plugin = result.local_plugin_data.get(plugin_name(), None)
             if plugin is None:
                 result.add_plugin_data(TranslatorData(model=self.agent.model))
+            if isinstance(plugin, dict):
+                plugin = TranslatorData(**plugin)
+                result.local_plugin_data[plugin_name()] = plugin
             plugin: TranslatorData = result.local_plugin_data[plugin_name()]
             plugin.chinese_summary = translation
         return results

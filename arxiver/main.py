@@ -23,10 +23,11 @@ def main():
 
 
 def search_and_parse(cfgs: Configs):
-    results = search(cfgs)
-    if not results:
-        logger.warning("No results found.")
-        return
+    # results = search(cfgs)
+    # if not results:
+    #     logger.warning("No results found.")
+    #     return
+    results: list[Result] = []
 
     plugin_names = cfgs.plugins
     if cfgs.translate and "Translator" not in plugin_names:

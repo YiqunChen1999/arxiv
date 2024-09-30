@@ -7,6 +7,11 @@ from dataclasses import dataclass
 class BasePluginData:
     plugin_name: str
     type: str = "local"
+    save_as_item: bool = False
+    save_as_text: bool = False
+
+    def string_for_saving(self, *args, **kwargs) -> str:
+        return ""
 
 
 @dataclass

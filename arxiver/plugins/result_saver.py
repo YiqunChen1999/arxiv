@@ -5,8 +5,7 @@ from dataclasses import dataclass
 from arxiver.utils.logging import create_logger
 from arxiver.base.plugin import BasePlugin, BasePluginData, GlobalPluginData
 from arxiver.base.result import Result
-from arxiver.plugins.translation import TranslatorData
-from arxiver.plugins.github_link_parser import GitHubLinkParserData
+from arxiver.base.constants import PAPER_INFO_SPLIT_LINE
 from arxiver.plugins.markdown_table_maker import (
     MarkdownTableMaker, MarkdownTableMakerData
 )
@@ -107,39 +106,32 @@ class ResultSaver(BasePlugin):
 
     def format_result(self, result: Result, index: int | None = None) -> str:
         authors = [r.name for r in result.authors]
-        code_link_plugin: GitHubLinkParserData | None = (
-            result.local_plugin_data.get(
-                GitHubLinkParserData.plugin_name, None
-            )
-        )
-        code_link: str = (
-            code_link_plugin.code_link if code_link_plugin else "N/A"
-        )
-        translation_plugin: TranslatorData | None = (
-            result.local_plugin_data.get(TranslatorData.plugin_name, None)
-        )
-        chinese_summary: str = (
-            translation_plugin.chinese_summary if translation_plugin else "N/A"
-        )
+        save_as_item = "\n".join([
+            r.string_for_saving() for r in result.local_plugin_data.values()
+            if r.save_as_item
+        ])
+        save_as_text = "\n\n".join([
+            r.string_for_saving() for r in result.local_plugin_data.values()
+            if r.save_as_text
+        ])
         string = f"""
+{PAPER_INFO_SPLIT_LINE}
 ## {result.title}
-- publish date: {result.published}
-- updated date: {result.updated}
 - authors: {', '.join(authors)}
-- primary category: {result.primary_category}
 - categories: {result.categories}
-- code link: {code_link}
+- comment: {result.comment}
+- doi: {result.doi}
+- updated date: {result.updated}
+- publish date: {result.published}
+- primary category: {result.primary_category}
+- journal reference: {result.journal_ref}
 - paper pdf link: {result.pdf_url}
 - paper abstract link: {result.entry_id}
-- doi: {result.doi}
-- comment: {result.comment}
-- journal reference: {result.journal_ref}
+{save_as_item}
 
 **ABSTRACT**
 {result.summary}
-
-**Chinese Abstract**
-{chinese_summary}
+{save_as_text}
 
 """
         if index is not None:

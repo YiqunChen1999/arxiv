@@ -14,6 +14,10 @@ def plugin_name():
 class GitHubLinkParserData(BasePluginData):
     plugin_name: str = "GitHubLinkParser"
     code_link: str = ""
+    save_as_item: bool = True
+
+    def string_for_saving(self, *args, **kwargs) -> str:
+        return f"- code link: {self.code_link}"
 
 
 class GitHubLinkParser(BasePlugin):
@@ -27,6 +31,9 @@ class GitHubLinkParser(BasePlugin):
             plugin_data: GitHubLinkParserData = (
                 result.local_plugin_data[plugin_name]
             )
+            if isinstance(plugin_data, dict):
+                plugin_data = GitHubLinkParserData(**plugin_data)
+                result.local_plugin_data[plugin_name] = plugin_data
             plugin_data.code_link = (
                 self.parse_github_link(result.summary)
                 or self.parse_github_link(result.comment)
