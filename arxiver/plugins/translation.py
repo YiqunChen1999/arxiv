@@ -27,7 +27,7 @@ class TranslatorData(BasePluginData):
     plugin_name: str = plugin_name()
     model: str = ""
     chinese_summary: str = ""
-    save_as_item: bool = True
+    save_as_text: bool = True
 
     def string_for_saving(self, *args, **kwargs) -> str:
         return f"**CHINESE ABSTRACT**\n{self.chinese_summary}"

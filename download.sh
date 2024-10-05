@@ -5,109 +5,107 @@ python download.py \
     --link 1712.09913 \
     --tags "insight"
 
-# python download.py \
-#     --markdown_subfolder "Vision" \
-#     --journal "arxiv" \
-#     --link 2409.10389v1 \
-#     --tags "few-shot,segmentation"
+python download.py \
+    --markdown_subfolder "Vision" \
+    --journal "arxiv" \
+    --link 2409.12760 \
+    --tags "segmentation,benchmark"
 
-# python download.py \
-#     --markdown_subfolder "Vision" \
-#     --journal "arxiv" \
-#     --link 2403.09307v3 \
-#     --tags "segmentation,foundation"
+python download.py \
+    --markdown_subfolder "Vision-Language" \
+    --journal "arxiv" \
+    --link 2408.15521 \
+    --tags "vision-language,segmentation"
 
-# python download.py \
-#     --markdown_subfolder "Vision" \
-#     --journal "arxiv" \
-#     --link 2409.08516v1 \
-#     --tags "segmentatin,incremental"
+python download.py \
+    --markdown_subfolder "Vision" \
+    --journal "arxiv" \
+    --link 2409.13687 \
+    --tags "segmentation"
 
-# python download.py \
-#     --markdown_subfolder "Vision-Language" \
-#     --journal "arxiv" \
-#     --link 2409.08468v1 \
-#     --tags "vision-language,open-vocabulary,segmentation"
+python download.py \
+    --markdown_subfolder "Vision" \
+    --journal "ECCV'24" \
+    --link 2409.14627 \
+    --tags "open-environment,segmentation"
 
-# python download.py \
-#     --markdown_subfolder "Vision" \
-#     --journal "TPAMI'24" \
-#     --link 2311.13254 \
-#     --tags "domain,segmentation"
+python download.py \
+    --markdown_subfolder "Vision" \
+    --journal "ICRA'25" \
+    --link 2409.15481 \
+    --tags "segmentation,segment-anything"
 
-# python download.py \
-#     --markdown_subfolder "Vision" \
-#     --journal "arxiv" \
-#     --link 2409.06002v2 \
-#     --tags "augmentation,segmentation"
+python download.py \
+    --markdown_subfolder "Vision" \
+    --journal "AAAI'24" \
+    --link 2312.17071 \
+    --tags "segmentation,lightweight"
 
-# python download.py \
-#     --markdown_subfolder "Vision-Language" \
-#     --journal "arxiv" \
-#     --link 2409.06809 \
-#     --tags "CLIP"
+python download.py \
+    --markdown_subfolder "Vision-Language" \
+    --journal "arxiv" \
+    --link 2311.17921 \
+    --tags "diffusion,vision-language"
 
-# python download.py \
-#     --markdown_subfolder "Vision-Language" \
-#     --journal "arxiv" \
-#     --link 2409.06579 \
-#     --tags "vision-language,CLIP,interpretability"
+python download.py \
+    --markdown_subfolder "Vision-Language" \
+    --journal "arxiv" \
+    --link 2409.16278 \
+    --tags "vision-language,open-vocabulary,segmentation"
 
-# python download.py \
-#     --markdown_subfolder "Vision" \
-#     --journal "arxiv" \
-#     --link 2409.06424 \
-#     --tags "segmentation"
+python download.py \
+    --markdown_subfolder "Vision" \
+    --journal "arxiv" \
+    --link 2409.16073 \
+    --tags "open-environment,detection,segmentation"
 
-# python download.py \
-#     --markdown_subfolder "Vision" \
-#     --journal "arxiv" \
-#     --link 2409.06305 \
-#     --tags "few-shot,segmentation,foundation"
+python download.py \
+    --markdown_subfolder "Vision" \
+    --journal "ECCV'24" \
+    --link 2312.09231 \
+    --tags "segmentation,synthetic,data"
 
-# python download.py \
-#     --markdown_subfolder "Vision" \
-#     --journal "arxiv" \
-#     --link https://arxiv.org/abs/2408.14957 \
-#     --tags "segmentation,few-shot"
+python download.py \
+    --markdown_subfolder "Vision" \
+    --journal "ECCV'24" \
+    --link 2408.04471 \
+    --tags "insight"
 
-# python download.py \
-#     --markdown_subfolder "Vision" \
-#     --journal "arxiv" \
-#     --link https://arxiv.org/abs/2408.16504 \
-#     --tags "segmentation"
+python download.py \
+    --markdown_subfolder "Vision" \
+    --journal "arxiv" \
+    --link 2409.15889 \
+    --tags "segmentation,segment-anything"
 
-# python download.py \
-#     --markdown_subfolder "Vision" \
-#     --journal "ECCV'24" \
-#     --link https://arxiv.org/abs/2408.16310 \
-#     --tags "segmentation,foundation" \
-#     --code_link http://github.com/lytang63/SlotSAM
+python download.py \
+    --markdown_subfolder "Vision-Language" \
+    --journal "ECCV'24" \
+    --link 2409.15801 \
+    --tags "segmentation,foundation,weakly-supervised"
 
-# python download.py \
-#     --markdown_subfolder "NLP" \
-#     --journal "arxiv" \
-#     --link https://arxiv.org/abs/2406.06391 \
-#     --tags "survey,continual-learning,incremental-learning" \
-#     --code_link https://github.com/qianlima-lab/awesome-lifelong-learning-methods-for-llm
+python download.py \
+    --markdown_subfolder "Vision" \
+    --journal "BRAVO'24" \
+    --link 2409.17208 \
+    --tags "insight,segmentation"
 
-# python download.py \
-#     --markdown_subfolder "NLP" \
-#     --journal "arxiv" \
-#     --link https://arxiv.org/abs/2407.15017 \
-#     --tags "survey,insight"
+python download.py \
+    --markdown_subfolder "NLP" \
+    --journal "arxiv" \
+    --link 2409.11283 \
+    --tags "hallucination"
 
-# python download.py \
-#     --markdown_subfolder "RL" \
-#     --journal "CoLLAs'24" \
-#     --link https://arxiv.org/abs/2405.19047 \
-#     --tags "RL"
+python download.py \
+    --markdown_subfolder "Vision" \
+    --journal "NeurIPS'24" \
+    --link 2409.17874 \
+    --tags "segment-anything,segmentation,insight"
 
-# python download.py \
-#     --markdown_subfolder "Vision-Language" \
-#     --journal "TPAMI'24" \
-#     --link 2304.07547 \
-#     --tags "segmentation,open-vocabulary,vision-language"
+python download.py \
+    --markdown_subfolder "Vision" \
+    --journal "NeurIPS'24" \
+    --link 2312.05284 \
+    --tags "segmentation,data,segment-anything"
 
 # python download.py \
 #     --markdown_subfolder "Vision-Language" \

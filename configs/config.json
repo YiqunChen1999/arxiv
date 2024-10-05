@@ -10,11 +10,11 @@
     "translate": false,
     "model": "",
     "batch_mode": false,
-    ".plugins": [
+    "plugins": [
         "ArxivParser", "GitHubLinkParser", "MarkdownTableMaker",
         "DownloadInformationCollector", "ResultSaver"
     ],
-    "plugins": [
-        "ResultsLoader", "Downloader"
+    ".plugins": [
+        "ResultLoader", "Downloader"
     ]
 }

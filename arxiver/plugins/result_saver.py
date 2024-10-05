@@ -131,6 +131,7 @@ class ResultSaver(BasePlugin):
 
 **ABSTRACT**
 {result.summary}
+
 {save_as_text}
 
 """

@@ -13,16 +13,16 @@ logger = create_logger(__name__)
 
 
 def plugin_name():
-    return "ResultsLoader"
+    return "ResultLoader"
 
 
 @dataclass
-class ResultsLoaderData(BasePluginData):
+class ResultLoaderData(BasePluginData):
     plugin_name: str = plugin_name()
     results: list[Result] | None = None
 
 
-class ResultsLoader(BasePlugin):
+class ResultLoader(BasePlugin):
     def __init__(self, output_directory: str):
         self.output_directory = output_directory
 
