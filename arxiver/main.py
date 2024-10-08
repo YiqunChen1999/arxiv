@@ -23,15 +23,17 @@ def main():
 
 
 def search_and_parse(cfgs: Configs):
-    # results = search(cfgs)
-    # if not results:
-    #     logger.warning("No results found.")
-    #     return
     results: list[Result] = []
 
     plugin_names = cfgs.plugins
     if cfgs.translate and "Translator" not in plugin_names:
         plugin_names.extend(["Translator", "ResultSaver"])
+    if cfgs.download:
+        plugin_names = ["ResultLoader", "Downloader"]
+        logger.warning(
+            f"download is set to True but Downloader is not in the list of "
+            f"plugins. Resetting the list of plugins to {plugin_names}"
+        )
     global_plugin_data = GlobalPluginData()
     plugins = [get_plugin_cls(name) for name in plugin_names]
     for cls in plugins:

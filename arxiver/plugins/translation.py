@@ -42,6 +42,9 @@ class Translator(BasePlugin):
     def process(self,
                 results: list[Result],
                 global_plugin_data: GlobalPluginData) -> list[Result]:
+        if len(results) == 0:
+            logger.warning("No results to translate.")
+            return results
         if self.batch_mode:
             return self.translate_batch(results)
         else:

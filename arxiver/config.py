@@ -47,6 +47,9 @@ class Configs:
     batch_mode: bool = field(
         default=DEFAULT.get('batch_mode', False),
         metadata={"help": f"See the field of {PATH}"})
+    download: bool = field(
+        default=DEFAULT.get('download', False),
+        metadata={"help": f"See the field of {PATH}"})
     plugins: list[str] = field(
         default_factory=lambda: DEFAULT.get(
             'plugins',
