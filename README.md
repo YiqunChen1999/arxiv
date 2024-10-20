@@ -33,11 +33,19 @@ Query papers in range of dates:
 python arxiver/main.py --datetime "2021-01-01:00:00 TO 2021-03-31:00:00"
 ```
 
-Query papers day by day (save to seperate folders):
+Query papers day by day (save to separate folders):
 
 ```bash
 query_day_by_day.sh 2021-01-01 2021-03-31
 ```
+
+# Design Philosophy
+
+The project is designed to be modular and extensible. You can easily add new plugins and new pipelines to meet your requirements.
+
+Each plugin is a class that implements the `process` method. The `process` method takes a list of `arxiver.base.result.Result` as input and returns processed results as output. The data of each plugin will be saved to the `local_plugin_data` of each `Result`. Some plugins may save the data to the `global_plugin_data` to share the data between different plugins.
+
+Each pipeline takes a list of plugins to execute. A pipeline can be seen as a frequently used list of plugins. You can specify the pipeline to execute by using the `--pipeline` argument. If the pre-defined pipelines do not meet your requirements, you can specify the plugins to execute by modifying the `plugins` field of `configs/config.json`.
 
 # Pipeline
 
