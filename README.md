@@ -90,22 +90,20 @@ python arxiver/main.py
 
 # Integrate Language Models
 
-Specify `--translate` and `--model MODEL_NAME` will enable the translation plugin. You need to specify the API key. See `configs/plugins/translation.json` for more details. The keys and values should match the arguments of the corresponding plugin class.
+Now using LLM to translate abstract is supported. You need to specify the API key and the model configs. see `configs/plugins/translation.json` for more details. The keys and values should match the arguments of the corresponding plugin class.
 
 If you want to change the model, you should first modify the `configs/core/agent.json` file. The keys and values should match the arguments of the corresponding agent class.
 
-**NOTE:** the `api_key` field in the `configs/core/agent.json` file specifies the environment name to get the corresponding API key.
+**NOTE:** The `api_key` field in the `configs/core/agent.json` file specifies the environment name to get the corresponding API key. So please set the `api_key` environment first.
 
 Example (using the free zhipuai model):
 
 ```bash
-python arxiver/main.py --translate --model "zhipuai-glm-4-flash"
-```
-
-Or, using the batch mode:
-
-```bash
-python arxiver/main.py --translate --model "zhipuai-glm-4-flash" --batch_mode
+python arxiver/main.py --pipeline "RequestThenTranslate"
 ```
 
 **NOTE:** Language model may produce incorrect results.
+
+# Configs
+
+All the configs can be found in the `configs` folder. They are used to specify the parameters of the plugins or the property of pipelines. You can modify them to meet your requirements.
