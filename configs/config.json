@@ -16,6 +16,9 @@
         "DownloadInformationCollector", "ResultSaver"
     ],
     ".plugins": [
-        "ResultLoader", "Downloader"
+        "ResultLoader", "MarkdownMetainfoParser", "Downloader"
+    ],
+    "..plugins": [
+        "ArxivParserFromJsonFile", "Downloader"
     ]
 }
