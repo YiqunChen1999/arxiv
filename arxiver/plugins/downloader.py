@@ -172,30 +172,20 @@ class DownloadInformationCollector(BasePlugin):
         return results
 
 
-class Downloader(BasePlugin):
-    def __init__(self,
-                 paper_note_folder: str,
-                 download_directory: str,
-                 markdown_directory: str,
-                 **kwargs) -> None:
-        super().__init__(**kwargs)
-        self.paper_note_folder = paper_note_folder
-        self.download_directory = download_directory
+class MarkdownMetainfoParser(BasePlugin):
+    def __init__(self, markdown_directory: str, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.markdown_directory = markdown_directory
 
     def process(self,
                 results: list[Result],
-                global_plugin_data: GlobalPluginData) -> list[Result]:
+                global_plugin_data: GlobalPluginData):
         paths = self.find_from_local_file()
         for path in paths:
-            self.parse_then_download(path, results)
+            self.parse(path, results)
         return results
 
-    def find_from_local_file(self):
-        paths = glob(f"{self.markdown_directory}/*@*.md")
-        return paths
-
-    def parse_then_download(self, path: str, results: list[Result]):
+    def parse(self, path: str, results: list[Result]):
         with open(path, "r") as f:
             markdown = f.read()
         papers = parse_paper(markdown)
@@ -204,18 +194,52 @@ class Downloader(BasePlugin):
                 tags = parse_tags_from_paper(paper)
                 category = parse_category_from_paper(paper)
                 journal = parse_journal_from_paper(paper)
-                pdf_link = parse_pdf_link_from_paper(paper)
                 code_link = parse_code_link_from_paper(paper)
+                pdf_link = parse_pdf_link_from_paper(paper)
                 result = match_result(pdf_link, results)
-                title = format_valid_title(result)
-                content = prepare_markdown_content(
-                    result, title, journal, code_link, tags,
-                    self.download_directory
-                )
-                save_markdown_file(
-                    osp.join(self.paper_note_folder, category), title, content
-                )
-                download(result, title, self.download_directory)
+                metainfo = {
+                    "tags": tags,
+                    "category": category,
+                    "journal": journal,
+                    "link": pdf_link,
+                    "code_link": code_link,
+                    "download": True,
+                }
+                result.update_metainfo(metainfo)
+
+    def find_from_local_file(self):
+        paths = glob(f"{self.markdown_directory}/*@*.md")
+        return paths
+
+
+class Downloader(BasePlugin):
+    def __init__(self,
+                 paper_note_folder: str,
+                 download_directory: str,
+                 **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.paper_note_folder = paper_note_folder
+        self.download_directory = download_directory
+
+    def process(self,
+                results: list[Result],
+                global_plugin_data: GlobalPluginData | None = None):
+        for result in results:
+            if not result.metainfo.download:
+                continue
+            category = result.metainfo.category
+            journal = result.metainfo.journal
+            tags: list[str] = result.metainfo.tags
+            code_link = result.metainfo.code_link
+            title = format_valid_title(result)
+            content = prepare_markdown_content(
+                result, title, journal, code_link, tags,
+                self.download_directory
+            )
+            save_markdown_file(
+                osp.join(self.paper_note_folder, category), title, content
+            )
+            download(result, title, self.download_directory)
 
 
 def download(result: Result, title: str, download_directory: str):

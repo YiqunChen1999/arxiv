@@ -1,8 +1,23 @@
 
-from dataclasses import asdict
+from copy import deepcopy
+from dataclasses import asdict, dataclass, field
 
 import arxiv
+from arxiver.utils.logging import create_logger
 from arxiver.base.plugin import BasePluginData
+
+
+logger = create_logger(__name__)
+
+
+@dataclass
+class Metainfo:
+    code_link: str = ""
+    category: str = ""
+    journal: str = ""
+    download: bool = False
+    tags: list[str] = field(default_factory=list)
+    id: str = ""
 
 
 class Result(arxiv.Result):
@@ -14,9 +29,26 @@ class Result(arxiv.Result):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.metainfo = Metainfo()
         self.local_plugin_data = {}
 
+    def update_metainfo(self, metainfo: Metainfo | dict):
+        if isinstance(metainfo, Metainfo):
+            self.metainfo = deepcopy(metainfo)
+        if isinstance(metainfo, dict):
+            orig_dict = asdict(self.metainfo)
+            for key, val in orig_dict.items():
+                orig_dict[key] = metainfo.get(key, val)
+            self.metainfo = Metainfo(**orig_dict)
+
+    def reset_plugin_data(self, data: BasePluginData):
+        self.local_plugin_data.pop(data.plugin_name, None)
+        self.add_plugin_data(data)
+
     def add_plugin_data(self, data: BasePluginData):
+        if data.plugin_name in self.local_plugin_data:
+            logger.warning(f"Plugin {data.plugin_name} already exists, skip.")
+            return
         self.local_plugin_data[data.plugin_name] = data
 
     @classmethod
@@ -64,4 +96,37 @@ class Result(arxiv.Result):
                 plugin_name: asdict(plugin_data)
                 for plugin_name, plugin_data in self.local_plugin_data.items()
             },
+            "metainfo": asdict(self.metainfo),
         }
+
+    def check_plugin_class(self, plugin_name: str, plugin_class: type):
+        if plugin_name not in self.local_plugin_data:
+            logger.warning(f"Plugin {plugin_name} not found, init one.")
+            self.add_plugin_data(plugin_class())
+        plugin_data = self.local_plugin_data[plugin_name]
+        if isinstance(plugin_data, dict):
+            plugin_data = plugin_class(**plugin_data)
+            self.local_plugin_data[plugin_name] = plugin_data
+
+
+def init_results_plugin_datas(results: list[Result],
+                              plugin_class: type):
+    for result in results:
+        result.add_plugin_data(plugin_class())
+    results = check_results_plugin_class(results, plugin_class)
+    return results
+
+
+def reset_results_plugin_datas(results: list[Result],
+                               plugin_datas: list[BasePluginData]):
+    for result, data in zip(results, plugin_datas):
+        result.reset_plugin_data(data)
+    return results
+
+
+def check_results_plugin_class(results: list[Result],
+                               plugin_class: type):
+    plugin_name: str = plugin_class.plugin_name
+    for result in results:
+        result.check_plugin_class(plugin_name, plugin_class)
+    return results
