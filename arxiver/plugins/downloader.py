@@ -271,7 +271,7 @@ def download(result: Result, title: str, download_directory: str):
 
 def format_valid_title(result: Result) -> str:
     title = (result.title
-             .replace(": ", "：").replace("?", "？")
+             .replace(": ", "：").replace("? ", "？").replace("?", "？")
              .replace("<", "").replace(">", "")
              .replace('"', "'").replace("/", "").replace("\\", "")
              .replace("|", "or").replace("*", "Star"))
@@ -325,7 +325,9 @@ def prepare_markdown_content(
              .replace("\\mnt\\h", "file:///H:")
              .replace("\\mnt\\i", "file:///I:")))
     else:
-        temp = osp.abspath(osp.join(download_directory, filename))
+        abspath = osp.abspath(osp.join(download_directory, filename))
+        abspath = "file://" + abspath.replace(" ", "%20")
+        temp = PAPER_NOTE_TEMPLATE.format(filename, abspath)
     content = meta + OBSIDIAN_NAVIGATION + temp
     return content
 
