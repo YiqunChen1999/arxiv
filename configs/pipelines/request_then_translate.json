@@ -1,0 +1,7 @@
+{
+    "plugins": [
+        "ArxivParser", "GitHubLinkParser", "MarkdownTableMaker",
+        "DownloadInformationCollector", "ResultSaver",
+        "Translator", "ResultSaver"
+    ]
+}

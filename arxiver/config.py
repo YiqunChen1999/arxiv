@@ -59,6 +59,9 @@ class Configs:
             ],
         ),
         metadata={"help": f"See the field of {PATH}"})
+    pipeline: str = field(
+        default=DEFAULT.get('pipeline', ""),
+        metadata={"help": f"See the field of {PATH}"})
 
     def __post_init__(self):
         self.datetime = parse_date(self.datetime)

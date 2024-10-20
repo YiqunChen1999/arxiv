@@ -8,8 +8,10 @@ from arxiver.config import Configs, parse_cfgs
 from arxiver.utils.logging import create_logger
 from arxiver.utils.io import load_json
 from arxiver.base.result import Result
+from arxiver.core.run import forward_plugins
 from arxiver.plugins import get_plugin_cls
 from arxiver.base.plugin import BasePlugin, GlobalPluginData
+from arxiver.pipelines import get_pipeline_cls
 
 logger = create_logger(__name__)
 
@@ -19,17 +21,39 @@ def main():
     global logger
     logger = create_logger(__name__, cfgs.output_directory)
     logger.info(f"{cfgs}")
-    search_and_parse(cfgs)
+    # search_and_parse(cfgs)
+    if cfgs.pipeline:
+        pipeline_cls = get_pipeline_cls(cfgs.pipeline)
+        pipe_json_path = (
+            get_class_file_path(pipeline_cls)
+            .replace("py", "json").replace("arxiver", "configs")
+        )
+        pipeline = pipeline_cls(pipe_json_path)
+        pipeline(cfgs)
+    else:
+        plugin_names = cfgs.plugins
+        forward_plugins(cfgs, plugin_names)
 
 
 def search_and_parse(cfgs: Configs):
     results: list[Result] = []
 
+    if cfgs.pipeline:
+        pipeline_cls = get_pipeline_cls(cfgs.pipeline)
+        pipe_json_path = (
+            get_class_file_path(pipeline_cls)
+            .replace("py", "json").replace("arxiver", "configs")
+        )
+        pipeline = pipeline_cls(pipe_json_path)
+        results = pipeline(cfgs)
+
     plugin_names = cfgs.plugins
     if cfgs.translate and "Translator" not in plugin_names:
         plugin_names.extend(["Translator", "ResultSaver"])
     if cfgs.download:
-        plugin_names = ["ResultLoader", "Downloader"]
+        plugin_names = [
+            "ResultLoader", "MarkdownMetainfoParser", "Downloader"
+        ]
         logger.warning(
             f"download is set to True but Downloader is not in the list of "
             f"plugins. Resetting the list of plugins to {plugin_names}"

@@ -1,0 +1,5 @@
+{
+    "plugins": [
+        "ResultLoader", "MarkdownMetainfoParser", "Downloader"
+    ]
+}
