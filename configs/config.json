@@ -7,10 +7,6 @@
     "markdown_directory": "../../Notebook/arxiv",
     "download_directory": "../../Papers",
     "query": "",
-    "translate": false,
-    "model": "zhipuai-glm-4-flash",
-    "batch_mode": true,
-    "download": false,
     "plugins": [
         "ArxivParser", "GitHubLinkParser", "MarkdownTableMaker",
         "DownloadInformationCollector", "ResultSaver"

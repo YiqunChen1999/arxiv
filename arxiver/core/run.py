@@ -40,11 +40,7 @@ def forward_plugins(cfgs: Configs,
 def prepare_plugins_args_from_configs(cfgs, plugin_names: list[str], cls):
     signature = inspect.signature(cls)
     args = {}
-    cfg_path = (
-        get_class_file_path(cls)
-        .replace("py", "json")
-        .replace("arxiver", "configs")
-    )
+    cfg_path = get_class_config_file_path(cls)
     plugin_config = {}
     if os.path.exists(cfg_path):
         plugin_config = load_json(cfg_path)
@@ -95,6 +91,15 @@ def search(cfgs: Configs):
             break
     results = [Result.create_from_arxiv_result(r) for r in results]
     return results
+
+
+def get_class_config_file_path(cls):
+    json_path = (
+        get_class_file_path(cls)
+        .replace("py", "json")
+        .replace("arxiver", "configs")
+    )
+    return json_path
 
 
 def get_class_file_path(cls):

@@ -17,39 +17,27 @@ class Configs:
     categories: str = field(
         default=DEFAULT.get(
             'categories', '(cat:cs.CV OR cat:cs.AI OR cat:cs.LG)'),
-        metadata={"help": f"See the field of {PATH}"})
+        metadata={"help": "See https://arxiv.org/category_taxonomy"})
     num_retries: int = field(default=DEFAULT.get('num_retries', 10))
     datetime: str = field(
         default=DEFAULT.get('datetime', None),
-        metadata={"help": f"See the field of {PATH}"})
+        metadata={"help": "Which date to search for."})
     output_directory: str = field(
         default=DEFAULT.get('output_directory', 'outputs'),
-        metadata={"help": f"See the field of {PATH}"})
+        metadata={"help": "Where to save the outputs."})
     paper_note_folder: str = field(
         default=DEFAULT.get('paper_note_folder', 'notes'),
-        metadata={"help": f"See the field of {PATH}"}
+        metadata={"help": "Where to save the generated paper markdown notes."}
     )
     markdown_directory: str = field(
         default=DEFAULT.get('markdown_directory', 'markdown'),
-        metadata={"help": f"See the field of {PATH}"})
+        metadata={"help": "Where to save the paper information in markdown."})
     download_directory: str = field(
         default=DEFAULT.get('download_directory', 'download'),
-        metadata={"help": f"See the field of {PATH}"})
+        metadata={"help": "Where to save the downloaded papers."})
     query: str = field(
         default=DEFAULT.get('query', ""),
-        metadata={"help": f"See the field of {PATH}"})
-    translate: bool = field(
-        default=DEFAULT.get('translate', False),
-        metadata={"help": f"See the field of {PATH}"})
-    model: str = field(
-        default=DEFAULT.get('model', ""),
-        metadata={"help": f"See the field of {PATH}"})
-    batch_mode: bool = field(
-        default=DEFAULT.get('batch_mode', False),
-        metadata={"help": f"See the field of {PATH}"})
-    download: bool = field(
-        default=DEFAULT.get('download', False),
-        metadata={"help": f"See the field of {PATH}"})
+        metadata={"help": "The query string directly used in arxiv search."})
     plugins: list[str] = field(
         default_factory=lambda: DEFAULT.get(
             'plugins',
@@ -58,10 +46,10 @@ class Configs:
                 "ResultSaver", "Translator", "ResultSaver",
             ],
         ),
-        metadata={"help": f"See the field of {PATH}"})
+        metadata={"help": "A list of plugins to run."})
     pipeline: str = field(
         default=DEFAULT.get('pipeline', ""),
-        metadata={"help": f"See the field of {PATH}"})
+        metadata={"help": "Run a pre-defined collection of plugins."})
 
     def __post_init__(self):
         self.datetime = parse_date(self.datetime)

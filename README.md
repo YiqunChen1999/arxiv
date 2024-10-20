@@ -2,7 +2,7 @@
 # Installation
 
 ```bash
-pip install arxiv
+pip install .
 ```
 
 # Usage
@@ -37,6 +37,55 @@ Query papers day by day (save to seperate folders):
 
 ```bash
 query_day_by_day.sh 2021-01-01 2021-03-31
+```
+
+# Pipeline
+
+A list of plugins to execute. For example, request all papers of interest from arXiv:
+
+```bash
+python arxiver/main.py --pipeline "Request"
+```
+
+Or, request all papers of interest from arXiv and translate the abstracts:
+
+```bash
+python arxiver/main.py --pipeline "RequestThenTranslate"
+```
+
+Or, download all papers of interest from `download.json`:
+
+```bash
+python arxiver/main.py --pipeline "Download"
+```
+
+Or, download all papers marked as `download` in markdown files `papers @ keyword.md`:
+
+```bash
+python arxiver/main.py --pipeline "DownloadByParsing"
+```
+
+# Plugins
+
+They are modules to execute some specific tasks. If the pre-defined pipelines does not meet your requirements, you can specify the plugins to execute.
+
+For example, request all papers of interest from arXiv by modifying the `configs/configs.json` file:
+
+```json
+{
+    ...,
+    "plugins": [
+        "ArxivParser", "GitHubLinkParser", "MarkdownTableMaker",
+        "DownloadInformationCollector", "ResultSaver"
+    ],
+    ...
+}
+```
+
+then execute:
+
+```bash
+python arxiver/main.py
 ```
 
 # Integrate Language Models
