@@ -1,7 +1,8 @@
 {
     "plugins": [
-        "ArxivParser", "GitHubLinkParser", "MarkdownTableMaker",
-        "DownloadInformationCollector", "ResultSaver",
-        "Translator", "ResultSaver"
+        "ArxivParser", "GitHubLinkParser", "DefaultKeywordsParser",
+        "MarkdownTableMaker", "DownloadInformationCollector",
+        "ResultSaverByDefaultKeywordParser", "Translator",
+        "ResultSaverByDefaultKeywordParser"
     ]
 }

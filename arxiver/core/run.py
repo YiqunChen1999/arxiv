@@ -31,7 +31,7 @@ def forward_plugins(cfgs: Configs,
             args.update(plugins_configs[name])
         str_args = "\n".join([f">>>> {k}: {v}" for k, v in args.items()])
         logger.info(
-            f"Running plugin {cls.__name__} with args\n{str_args}"
+            f"Running plugin {cls.__name__} with following args:\n{str_args}"
         )
         plugin: BasePlugin = cls(**args)
         results = plugin(results, global_plugin_data)

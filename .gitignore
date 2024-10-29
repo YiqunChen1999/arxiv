@@ -7,3 +7,5 @@ tmp
 .DS_Store
 **.egg-info
 .DS_Store
+download.sh
+download.json

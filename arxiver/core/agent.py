@@ -58,10 +58,12 @@ class Agent:
         configs = load_json(path)
         self.model = model
         self.config = ModelConfig(**configs.get(model, {}))
+        logger.info(f"Creating agent with config:\n{str(self.config)}")
         self.client = OpenAI(
             api_key=os.environ.get(self.config.api_key, None),
             base_url=self.config.base_url,
         )
+        logger.info(f"Agent created with model {self.config.model}")
         self.history = History()
 
     def append(self, role: str, content: str):

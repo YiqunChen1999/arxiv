@@ -47,7 +47,9 @@ class Result(arxiv.Result):
 
     def add_plugin_data(self, data: BasePluginData):
         if data.plugin_name in self.local_plugin_data:
-            logger.warning(f"Plugin {data.plugin_name} already exists, skip.")
+            logger.warning_once(
+                f"Plugin {data.plugin_name} already exists, skip."
+            )
             return
         self.local_plugin_data[data.plugin_name] = data
 

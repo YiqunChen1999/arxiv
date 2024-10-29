@@ -11,7 +11,8 @@ class RequestThenTranslate(BasePipeline):
     @property
     def default_plugins(self):
         return [
-            "ArxivParser", "GitHubLinkParser", "MarkdownTableMaker",
-            "DownloadInformationCollector", "ResultSaver",
-            "Translator", "ResultSaver"
+            "ArxivParser", "GitHubLinkParser", "DefaultKeywordsParser",
+            "MarkdownTableMaker", "DownloadInformationCollector",
+            "ResultSaverByDefaultKeywordParser", "Translator",
+            "ResultSaverByDefaultKeywordParser"
         ]

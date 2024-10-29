@@ -42,8 +42,10 @@ class Configs:
         default_factory=lambda: DEFAULT.get(
             'plugins',
             [
-                "GitHubLinkParser", "MarkdownTableMaker",
-                "ResultSaver", "Translator", "ResultSaver",
+                "ArxivParser", "GitHubLinkParser", "DefaultKeywordsParser",
+                "MarkdownTableMaker", "DownloadInformationCollector",
+                "ResultSaverByDefaultKeywordParser", "Translator",
+                "ResultSaverByDefaultKeywordParser"
             ],
         ),
         metadata={"help": "A list of plugins to run."})

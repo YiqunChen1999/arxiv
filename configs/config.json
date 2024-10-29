@@ -8,8 +8,9 @@
     "download_directory": "../../Papers",
     "query": "",
     "plugins": [
-        "ArxivParser", "GitHubLinkParser", "MarkdownTableMaker",
-        "DownloadInformationCollector", "ResultSaver"
+        "ArxivParser", "GitHubLinkParser", "DefaultKeywordsParser",
+        "MarkdownTableMaker", "DownloadInformationCollector",
+        "ResultSaverByDefaultKeywordParser"
     ],
     ".plugins": [
         "ResultLoader", "MarkdownMetainfoParser", "Downloader"

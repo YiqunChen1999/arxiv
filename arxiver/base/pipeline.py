@@ -34,6 +34,13 @@ class BasePipeline(ABC):
             cfg = {}
         self.plugins: list[str] = cfg.get("plugins", self.default_plugins)
         self.plugins_configs: dict[str, dict] = cfg.get("configs", dict())
+        plugins_string = ''.join(
+            [f'  - {plugin}\n' for plugin in self.plugins]
+        )
+        logger.info(
+            f"Pipeline {self.__class__.__name__} is initialized. Running with "
+            f"plugins: \n{plugins_string}"
+        )
 
     @abstractmethod
     def process(self, cfgs: Configs):
