@@ -13,6 +13,7 @@ class RequestThenTranslate(BasePipeline):
         return [
             "ArxivParser", "GitHubLinkParser", "DefaultKeywordsParser",
             "MarkdownTableMaker", "DownloadInformationCollector",
-            "ResultSaverByDefaultKeywordParser", "Translator",
+            "ResultSaverByDefaultKeywordParser",
+            "TranslatorWithDefaultKeywordsParser",
             "ResultSaverByDefaultKeywordParser"
         ]

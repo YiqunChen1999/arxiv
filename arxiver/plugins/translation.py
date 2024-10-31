@@ -5,6 +5,7 @@ from arxiver.utils.logging import create_logger
 from arxiver.base.plugin import BasePlugin, BasePluginData, GlobalPluginData
 from arxiver.base.result import Result
 from arxiver.core.agent import Agent
+from arxiver.plugins.default_keywords_parser import DefaultKeywordsParserData
 
 
 logger = create_logger(__name__)
@@ -51,13 +52,18 @@ class Translator(BasePlugin):
             return self.translate_single(results)
 
     def translate_batch(self, results: list[Result]) -> list[Result]:
-        summaries = [r.summary for r in results]
+        summaries = [
+            r.summary for r in results if self.requires_translation(r)
+        ]
+        results_to_translate = [
+            r for r in results if self.requires_translation(r)
+        ]
         logger.info(f"Translating {len(summaries)} summaries...")
         translations = self.agent.complete_batches([
             f"Given the following text:\n\n{s}\n\n{translation_instruction()}"
             for s in summaries
         ])
-        for result, translation in zip(results, translations):
+        for result, translation in zip(results_to_translate, translations):
             plugin = result.local_plugin_data.get(plugin_name(), None)
             if plugin is None:
                 result.add_plugin_data(TranslatorData(model=self.agent.model))
@@ -69,9 +75,16 @@ class Translator(BasePlugin):
         return results
 
     def translate_single(self, results: list[Result]) -> list[Result]:
-        for result in results:
+        results_to_translate = [
+            r for r in results if self.requires_translation(r)
+        ]
+        logger.info(f"Translating {len(results_to_translate)} summaries...")
+        for idx, result in enumerate(results_to_translate):
             summary = result.summary
-            logger.info(f"Translating the summary of {result.title}...")
+            logger.info(
+                f"Translating the summary of "
+                f"{idx+1}-th/{len(results_to_translate)} paper: {result.title}"
+            )
             translation = self.agent.complete_single(
                 f"Given the following text:\n\n{summary}\n\n"
                 f"{translation_instruction()}"
@@ -82,3 +95,38 @@ class Translator(BasePlugin):
             plugin: TranslatorData = result.local_plugin_data[plugin_name()]
             plugin.chinese_summary = translation
         return results
+
+    def requires_translation(self, result: Result) -> bool:
+        return True
+
+
+class TranslatorWithDefaultKeywordsParser(Translator):
+    def __init__(self,
+                 model: str,
+                 batch_mode: bool = True,
+                 prompt: str = "",
+                 translate_all_results: bool = False):
+        super().__init__(
+            model=model,
+            batch_mode=batch_mode,
+            prompt=prompt,
+        )
+        self.translate_all_results = translate_all_results
+
+    def requires_translation(self, result: Result):
+        if self.translate_all_results:
+            return True
+        plugin_data: DefaultKeywordsParserData = (
+            result.local_plugin_data.get(
+                DefaultKeywordsParserData.plugin_name, None
+            )
+        )
+        translate = False
+        if plugin_data and len(plugin_data.keywords) > 0:
+            for keyword in plugin_data.keywords:
+                if keyword in plugin_data.ignorance:
+                    translate = False
+                    break
+            else:
+                translate = True
+        return translate

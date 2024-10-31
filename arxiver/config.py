@@ -55,6 +55,7 @@ class Configs:
 
     def __post_init__(self):
         self.datetime = parse_date(self.datetime)
+        self.date = self.datetime.strip('lastUpdatedDate:[')[:8]
         if not self.query:
             self.query = f"{self.categories} AND {self.datetime}"
         self.output_directory = osp.join(self.output_directory,

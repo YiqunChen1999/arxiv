@@ -10,5 +10,16 @@
             "temperature": 0.5,
             "top_p": 0.9
         }
+    },
+    "lingyi-yi-lightning": {
+        "base_url": "https://api.lingyiwanwu.com/v1",
+        "endpoint": "/v1/chat/completions",
+        "model": "yi-lightning",
+        "api_key": "LINGYI_APIKEY",
+        "model_kwargs": {
+            "max_tokens": 8182,
+            "temperature": 0.5,
+            "top_p": 0.9
+        }
     }
 }

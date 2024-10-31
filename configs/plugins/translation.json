@@ -1,5 +1,6 @@
 {
-    "model": "zhipuai-glm-4-flash",
-    "batch_mode": true,
+    "model": "lingyi-yi-lightning",
+    "batch_mode": false,
+    "translate_all_results": false,
     "prompt": "Directly translate the given text into Chinese. Don't output irrelevant contexts."
 }

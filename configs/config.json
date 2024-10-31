@@ -16,6 +16,6 @@
         "ResultLoader", "MarkdownMetainfoParser", "Downloader"
     ],
     "..plugins": [
-        "ArxivParserFromJsonFile", "Downloader"
+        "DownloadedPaperIndexGenerator"
     ]
 }
