@@ -76,6 +76,6 @@ echo "# Query arxiv from $date1 (include) to $date2 (include). $delta_days days 
 for delta in $(seq 0 $delta_days); do
     current_date=$(add_days_to_date "$date1" "$delta")
     # echo $current_date
-    python arxiver/main.py --datetime $current_date --translate --batch_mode --model "zhipuai-glm-4-flash"
-    sleep 3  # Sleep for 3 seconds before next arxiv query
+    python arxiver/main.py --datetime $current_date --pipeline "GenerateIndex"
+    # sleep 3  # Sleep for 3 seconds before next arxiv query
 done

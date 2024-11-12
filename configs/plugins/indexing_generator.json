@@ -1,5 +1,5 @@
 {
-    "indexing_directory": "../../Notebook/论文笔记/Indexing",
+    "index_directory": "../../Notebook/论文笔记/Index",
     "papers_note_folders": [
         "论文笔记/NLP",
         "论文笔记/RL",

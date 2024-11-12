@@ -9,7 +9,7 @@ from arxiver.base.result import Result
 logger = create_logger(__name__)
 
 
-INDEXING_CONTENT = """---
+INDEX_CONTENT = """---
 date: {year}-{month}-{day}
 ---
 
@@ -52,30 +52,30 @@ WHERE Date.year = {year} AND Date.month = {month} AND Date.day = {day} AND DONE 
 class DownloadedPaperIndexGenerator(BasePlugin):
     def __init__(self,
                  date: str,
-                 indexing_directory: str,
+                 index_directory: str,
                  papers_note_folders: list[str],
                  version: str = "",
                  dependencies: list[str] | None = None,
                  **kwargs) -> None:
         super().__init__(version, dependencies, **kwargs)
         self.date = date
-        self.indexing_directory = osp.abspath(indexing_directory)
+        self.index_directory = osp.abspath(index_directory)
         self.papers_note_folders = papers_note_folders
 
     def process(self,
                 results: list[Result] | None = None,
                 global_plugin_data: GlobalPluginData | None = None):
-        logger.info(f"Generating indexing files for date: {self.date}")
+        logger.info(f"Generating index files for date: {self.date}")
         year = self.date[:4]
         month = self.date[4:6]
         day = self.date[6:8]
-        content = INDEXING_CONTENT.format(
+        content = INDEX_CONTENT.format(
             folder="\" OR \"".join(self.papers_note_folders),
             year=year, month=month, day=day,
         )
         path_to_md = osp.join(
-            self.indexing_directory, f"{year}-{month}-{day}.md"
+            self.index_directory, f"{year}-{month}-{day}.md"
         )
-        logger.info(f"Writing indexing file to {path_to_md}")
+        logger.info(f"Writing index file to {path_to_md}")
         with open(path_to_md, 'w') as f:
             f.write(content)

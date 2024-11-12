@@ -4,7 +4,7 @@ from arxiver.core.run import forward_plugins
 from arxiver.base.pipeline import BasePipeline
 
 
-class GenerateIndexing(BasePipeline):
+class GenerateIndex(BasePipeline):
     def process(self, cfgs: Configs):
         return forward_plugins(cfgs, self.plugins, self.plugins_configs)
 
