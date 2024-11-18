@@ -244,7 +244,9 @@ class Downloader(BasePlugin):
 
 def download(result: Result, title: str, download_directory: str):
     filename = title + ".pdf"
-    logger.info(f"Downloading paper to {download_directory}")
+    logger.info(
+        f"Downloading paper to '{osp.abspath(download_directory)}/{filename}'"
+    )
     assert result.entry_id is not None, "PDF link is None."
     parts = result.entry_id.split('/')[-1]
     if len(parts) == 1:

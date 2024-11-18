@@ -127,8 +127,8 @@ def check_result_contains_keyword(result: Result, keyword: str):
             return True
     else:
         if (
-                keyword in result.summary.lower()
-                or keyword in result.title.lower()):
+                keyword.lower() in result.summary.lower()
+                or keyword.lower() in result.title.lower()):
             return True
     return False
 
