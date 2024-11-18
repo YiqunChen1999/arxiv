@@ -6,7 +6,7 @@
         "model": "glm-4-flash",
         "api_key": "ZHIPUAI_APIKEY",
         "model_kwargs": {
-            "max_tokens": 8182,
+            "max_tokens": 4000,
             "temperature": 0.5,
             "top_p": 0.9
         }
@@ -17,7 +17,7 @@
         "model": "glm-4-plus",
         "api_key": "ZHIPUAI_APIKEY",
         "model_kwargs": {
-            "max_tokens": 8182,
+            "max_tokens": 4000,
             "temperature": 0.5,
             "top_p": 0.9
         }
@@ -28,7 +28,7 @@
         "model": "yi-lightning",
         "api_key": "LINGYI_APIKEY",
         "model_kwargs": {
-            "max_tokens": 8182,
+            "max_tokens": 4000,
             "temperature": 0.5,
             "top_p": 0.9
         }

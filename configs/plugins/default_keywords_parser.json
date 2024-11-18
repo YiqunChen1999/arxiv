@@ -19,35 +19,91 @@
     "ignorance": {
         "detect": [
             " disease ", " cancer ", " medical ", " polyp ", " lesion ",
-            " mri ", " tumor ", " lidar "
+            " mri ", " tumor ", " lidar ", " remote sens", " audio ", " video ",
+            " tracking ", " video ", " 3d ", " point cloud", " covid-19 ",
+            " vehicle", " Bird's Eye View ", " BEV ", " surgery ", " Cardiac ",
+            " deepfake ", " out-of-distribution ", " toxicity ", " speech ",
+            " fraud ", " traffic ", " salient object ", " self-driving ",
+            " emotion ", " anomaly ", " Meningeal ", " Lymphatic ", " Vessel ",
+            " music ", " clinical ", " economist", " Jailbreak ", " Vessel ",
+            " Clinical ", " Spatiotemporal ", "Crack Segmentation"
         ],
         "diffusion": [
             " disease ", " cancer ", " medical ", " polyp ", " lesion ",
-            " mri ", " tumor ", " lidar "
+            " mri ", " tumor ", " lidar ", " remote sens", " audio ", " video ",
+            " tracking ", " video ", " 3d ", " point cloud", " covid-19 ",
+            " vehicle", " Bird's Eye View ", " BEV ", " surgery ", " Cardiac ",
+            " deepfake ", " out-of-distribution ", " toxicity ", " speech ",
+            " fraud ", " traffic ", " salient object ", " self-driving ",
+            " emotion ", " anomaly ", " Meningeal ", " Lymphatic ", " Vessel ",
+            " music ", " clinical ", " economist", " Jailbreak ", " Vessel ",
+            " Clinical ", " Spatiotemporal ", "Crack Segmentation"
         ],
         "segment": [
             " disease ", " cancer ", " medical ", " polyp ", " lesion ",
-            " mri ", " tumor ", " lidar "
+            " mri ", " tumor ", " lidar ", " remote sens", " audio ", " video ",
+            " tracking ", " video ", " 3d ", " point cloud", " covid-19 ",
+            " vehicle", " Bird's Eye View ", " BEV ", " surgery ", " Cardiac ",
+            " deepfake ", " out-of-distribution ", " toxicity ", " speech ",
+            " fraud ", " traffic ", " salient object ", " self-driving ",
+            " emotion ", " anomaly ", " Meningeal ", " Lymphatic ", " Vessel ",
+            " music ", " clinical ", " economist", " Jailbreak ", " Vessel ",
+            " Clinical ", " Spatiotemporal ", "Crack Segmentation"
         ],
         "vision": [
             " disease ", " cancer ", " medical ", " polyp ", " lesion ",
-            " mri ", " tumor ", " lidar "
+            " mri ", " tumor ", " lidar ", " remote sens", " audio ", " video ",
+            " tracking ", " video ", " 3d ", " point cloud", " covid-19 ",
+            " vehicle", " Bird's Eye View ", " BEV ", " surgery ", " Cardiac ",
+            " deepfake ", " out-of-distribution ", " toxicity ", " speech ",
+            " fraud ", " traffic ", " salient object ", " self-driving ",
+            " emotion ", " anomaly ", " Meningeal ", " Lymphatic ", " Vessel ",
+            " music ", " clinical ", " economist", " Jailbreak ", " Vessel ",
+            " Clinical ", " Spatiotemporal ", "Crack Segmentation"
         ],
         "vision-language": [
             " disease ", " cancer ", " medical ", " polyp ", " lesion ",
-            " mri ", " tumor ", " lidar "
+            " mri ", " tumor ", " lidar ", " remote sens", " audio ", " video ",
+            " tracking ", " video ", " 3d ", " point cloud", " covid-19 ",
+            " vehicle", " Bird's Eye View ", " BEV ", " surgery ", " Cardiac ",
+            " deepfake ", " out-of-distribution ", " toxicity ", " speech ",
+            " fraud ", " traffic ", " salient object ", " self-driving ",
+            " emotion ", " anomaly ", " Meningeal ", " Lymphatic ", " Vessel ",
+            " music ", " clinical ", " economist", " Jailbreak ", " Vessel ",
+            " Clinical ", " Spatiotemporal ", "Crack Segmentation"
         ],
         "multimodal": [
             " disease ", " cancer ", " medical ", " polyp ", " lesion ",
-            " mri ", " tumor ", " lidar "
+            " mri ", " tumor ", " lidar ", " remote sens", " audio ", " video ",
+            " tracking ", " video ", " 3d ", " point cloud", " covid-19 ",
+            " vehicle", " Bird's Eye View ", " BEV ", " surgery ", " Cardiac ",
+            " deepfake ", " out-of-distribution ", " toxicity ", " speech ",
+            " fraud ", " traffic ", " salient object ", " self-driving ",
+            " emotion ", " anomaly ", " Meningeal ", " Lymphatic ", " Vessel ",
+            " music ", " clinical ", " economist", " Jailbreak ", " Vessel ",
+            " Clinical ", " Spatiotemporal ", "Crack Segmentation"
         ],
         "segment & vision": [
             " disease ", " cancer ", " medical ", " polyp ", " lesion ",
-            " mri ", " tumor ", " lidar "
+            " mri ", " tumor ", " lidar ", " remote sens", " audio ", " video ",
+            " tracking ", " video ", " 3d ", " point cloud", " covid-19 ",
+            " vehicle", " Bird's Eye View ", " BEV ", " surgery ", " Cardiac ",
+            " deepfake ", " out-of-distribution ", " toxicity ", " speech ",
+            " fraud ", " traffic ", " salient object ", " self-driving ",
+            " emotion ", " anomaly ", " Meningeal ", " Lymphatic ", " Vessel ",
+            " music ", " clinical ", " economist", " Jailbreak ", " Vessel ",
+            " Clinical ", " Spatiotemporal ", "Crack Segmentation"
         ],
         "segment & multimodal": [
             " disease ", " cancer ", " medical ", " polyp ", " lesion ",
-            " mri ", " tumor ", " lidar "
+            " mri ", " tumor ", " lidar ", " remote sens", " audio ", " video ",
+            " tracking ", " video ", " 3d ", " point cloud", " covid-19 ",
+            " vehicle", " Bird's Eye View ", " BEV ", " surgery ", " Cardiac ",
+            " deepfake ", " out-of-distribution ", " toxicity ", " speech ",
+            " fraud ", " traffic ", " salient object ", " self-driving ",
+            " emotion ", " anomaly ", " Meningeal ", " Lymphatic ", " Vessel ",
+            " music ", " clinical ", " economist", " Jailbreak ", " Vessel ",
+            " Clinical ", " Spatiotemporal ", "Crack Segmentation"
         ]
     }
 }
