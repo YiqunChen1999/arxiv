@@ -1,6 +1,6 @@
 {
     "categories": "(cat:cs.CV OR cat:cs.AI OR cat:cs.LG)",
-    "num_retries": 10,
+    "num_retries": 16,
     "datetime": null,
     "delay_seconds": 900,
     "output_directory": "outputs",
