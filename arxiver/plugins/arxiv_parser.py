@@ -24,20 +24,22 @@ class ArxivParserFromJsonFileData(BasePluginData):
 
 
 class ArxivParser(BasePlugin):
-    def __init__(self, query: str, num_retries: int):
+    def __init__(self, query: str, num_retries: int, delay_seconds: int):
         self.query = query
         self.num_retries = num_retries
+        self.delay_seconds = delay_seconds
 
     def process(self,
                 results: list[Result],
                 global_plugin_data: GlobalPluginData) -> list[Result]:
-        return search(self.num_retries, self.query)
+        return search(self.query, self.num_retries, self.delay_seconds)
 
 
 class ArxivParserFromJsonFile(BasePlugin):
     def __init__(self,
                  json_file: str,
                  num_retries: int,
+                 delay_seconds: int,
                  *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         json_file = osp.abspath(json_file)
@@ -45,6 +47,7 @@ class ArxivParserFromJsonFile(BasePlugin):
             raise FileNotFoundError(f"{json_file} does not exist.")
         self.json_file = json_file
         self.num_retries = num_retries
+        self.delay_seconds = delay_seconds
 
     def process(self,
                 results: list[Result],
@@ -52,7 +55,9 @@ class ArxivParserFromJsonFile(BasePlugin):
         metainfo: list[dict] = load_json(self.json_file)  # type: ignore
         self.check_metas(metainfo)
         queries = [f"id:{item['id']}" for item in metainfo]
-        results = search(self.num_retries, " OR ".join(queries))
+        results = search(" OR ".join(queries),
+                         self.num_retries,
+                         self.delay_seconds)
         results = [Result.create_from_arxiv_result(r) for r in results]
         for result in results:
             item_of_result = None
@@ -82,9 +87,9 @@ class ArxivParserFromJsonFile(BasePlugin):
             logger.debug(f"Check item: {item}")
 
 
-def search(num_retries: int, query: str) -> list[Result]:
+def search(query: str, num_retries: int, delay_seconds: int) -> list[Result]:
     results = []
-    client = arxiv.Client(num_retries=num_retries)
+    client = arxiv.Client(num_retries=num_retries, delay_seconds=delay_seconds)
     for i in range(num_retries):
         search = arxiv.Search(query=query,
                               sort_by=arxiv.SortCriterion.LastUpdatedDate,

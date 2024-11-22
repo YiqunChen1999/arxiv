@@ -1,3 +1,4 @@
 {
-    "json_file": "./download.json"
+    "json_file": "./download.json",
+    "delay_seconds": 900
 }
