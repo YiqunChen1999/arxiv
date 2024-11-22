@@ -2,6 +2,7 @@
     "categories": "(cat:cs.CV OR cat:cs.AI OR cat:cs.LG)",
     "num_retries": 10,
     "datetime": null,
+    "delay_seconds": 900,
     "output_directory": "outputs",
     "paper_note_folder": "../../Notebook/论文笔记",
     "markdown_directory": "../../Notebook/arxiv",
