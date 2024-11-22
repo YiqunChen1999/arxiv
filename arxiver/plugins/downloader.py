@@ -240,6 +240,7 @@ class Downloader(BasePlugin):
                 osp.join(self.paper_note_folder, category), title, content
             )
             download(result, title, self.download_directory)
+        return results
 
 
 def download(result: Result, title: str, download_directory: str):
