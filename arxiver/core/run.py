@@ -1,9 +1,8 @@
 
 import os
 import sys
+import time
 import inspect
-
-import arxiv
 
 from arxiver.config import Configs
 from arxiver.utils.io import load_json
@@ -19,6 +18,21 @@ logger = create_logger(__name__)
 def forward_plugins(cfgs: Configs,
                     plugin_names: list[str],
                     plugins_configs: dict[str, dict] | None = None):
+    results = forward_plugins_once(cfgs, plugin_names, plugins_configs)
+    for idx in range(cfgs.max_retries_num):
+        if len(results):
+            break
+        logger.info(f"Retry {idx + 1}/{cfgs.max_retries_num}. "
+                    f"Sleeping for {cfgs.sleep_seconds} seconds.")
+        time.sleep(cfgs.sleep_seconds)
+        results = forward_plugins_once(cfgs, plugin_names, plugins_configs)
+    return results
+
+
+def forward_plugins_once(
+        cfgs: Configs,
+        plugin_names: list[str],
+        plugins_configs: dict[str, dict] | None = None) -> list[Result]:
     results: list[Result] = []
 
     global_plugin_data = GlobalPluginData()
@@ -34,7 +48,8 @@ def forward_plugins(cfgs: Configs,
             f"Running plugin {cls.__name__} with following args:\n{str_args}"
         )
         plugin: BasePlugin = cls(**args)
-        results = plugin(results, global_plugin_data)
+        results: list[Result] = plugin(results, global_plugin_data)
+    return results
 
 
 def prepare_plugins_args_from_configs(cfgs, plugin_names: list[str], cls):
@@ -75,22 +90,6 @@ def verify_plugin_dependencies(plugin_names: list[str], cls, args: dict):
                     f"Plugin {cls.__name__} requires {dependency} which "
                     f"is not in the list of plugins."
                 )
-
-
-def search(cfgs: Configs):
-    results = []
-    client = arxiv.Client(num_retries=cfgs.num_retries)
-    for i in range(cfgs.num_retries):
-        search = arxiv.Search(query=cfgs.query,
-                              sort_by=arxiv.SortCriterion.LastUpdatedDate,
-                              max_results=10000)
-        results = list(client.results(search))
-        logger.info(f"Get {len(results)} items.")
-        if len(results):
-            logger.info(f"Range: {results[-1].updated} {results[0].updated}")
-            break
-    results = [Result.create_from_arxiv_result(r) for r in results]
-    return results
 
 
 def get_class_config_file_path(cls):

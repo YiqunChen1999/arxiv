@@ -18,14 +18,14 @@ class Configs:
         default=DEFAULT.get(
             'categories', '(cat:cs.CV OR cat:cs.AI OR cat:cs.LG)'),
         metadata={"help": "See https://arxiv.org/category_taxonomy"})
-    num_retries: int = field(
-        default=DEFAULT.get('num_retries', 16),
-        metadata={"help": "Number of retries if the search result is empty."})
     datetime: str = field(
         default=DEFAULT.get('datetime', None),
         metadata={"help": "Which date to search for."})
-    delay_seconds: int = field(
-        default=DEFAULT.get('delay_seconds', 3),
+    max_retries_num: int = field(
+        default=DEFAULT.get('max_retries_num', 16),
+        metadata={"help": "Number of retries if the search result is empty."})
+    sleep_seconds: int = field(
+        default=DEFAULT.get('sleep_seconds', 3),
         metadata={"help": "Sleep seconds until next request."})
     output_directory: str = field(
         default=DEFAULT.get('output_directory', 'outputs'),
