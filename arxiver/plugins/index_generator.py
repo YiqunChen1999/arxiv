@@ -79,3 +79,4 @@ class DownloadedPaperIndexGenerator(BasePlugin):
         logger.info(f"Writing index file to {path_to_md}")
         with open(path_to_md, 'w') as f:
             f.write(content)
+        return results
