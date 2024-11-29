@@ -116,7 +116,13 @@ class Agent:
         )
         while True:
             sleep(30)
-            job = self.client.batches.retrieve(batch_task.id)
+            try:
+                job = self.client.batches.retrieve(batch_task.id)
+            except Exception as e:
+                logger.warning(
+                    f"Failed to retrieve job {batch_task.id} due to {e}"
+                )
+                continue
             if job.status in ("validating", "in_progress", "finalizing"):
                 logger.info(f"Completion status: {job.status}")
                 continue
