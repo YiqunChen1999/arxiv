@@ -2,6 +2,6 @@
     "plugins": [
         "ArxivParser", "GitHubLinkParser", "DefaultKeywordsParser",
         "MarkdownTableMaker", "DownloadInformationCollector",
-        "ResultSaverByDefaultKeywordParser"
+        "ResultSaverByDefaultKeywordParser", "DownloadedPaperIndexGenerator"
     ]
 }

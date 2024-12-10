@@ -15,5 +15,6 @@ class RequestThenTranslate(BasePipeline):
             "MarkdownTableMaker", "DownloadInformationCollector",
             "ResultSaverByDefaultKeywordParser",
             "TranslatorWithDefaultKeywordsParser",
-            "ResultSaverByDefaultKeywordParser"
+            "ResultSaverByDefaultKeywordParser",
+            "DownloadedPaperIndexGenerator",
         ]

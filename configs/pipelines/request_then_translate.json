@@ -4,6 +4,6 @@
         "MarkdownTableMaker", "DownloadInformationCollector",
         "ResultSaverByDefaultKeywordParser",
         "TranslatorWithDefaultKeywordsParser",
-        "ResultSaverByDefaultKeywordParser"
+        "ResultSaverByDefaultKeywordParser", "DownloadedPaperIndexGenerator"
     ]
 }

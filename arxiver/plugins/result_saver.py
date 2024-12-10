@@ -325,7 +325,7 @@ class ResultSaverByDefaultKeywordParser(BasePlugin):
 - paper abstract link: {result.entry_id}
 {save_as_item}
 
-**ABSTRACT**
+### ABSTRACT
 {result.summary}
 
 {save_as_text}

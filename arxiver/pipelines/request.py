@@ -14,4 +14,5 @@ class Request(BasePipeline):
             "ArxivParser", "GitHubLinkParser", "DefaultKeywordsParser",
             "MarkdownTableMaker", "DownloadInformationCollector",
             "ResultSaverByDefaultKeywordParser",
+            "DownloadedPaperIndexGenerator",
         ]

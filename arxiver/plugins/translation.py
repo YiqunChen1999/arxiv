@@ -27,11 +27,17 @@ def translation_instruction():
 class TranslatorData(BasePluginData):
     plugin_name: str = plugin_name()
     model: str = ""
-    chinese_summary: str = ""
+    translated_summary: str = ""
+    translated_title: str = ""
     save_as_text: bool = True
 
     def string_for_saving(self, *args, **kwargs) -> str:
-        return f"**CHINESE ABSTRACT**\n{self.chinese_summary}"
+        text = (
+            f"### TRANSLATED\n\n"
+            f"**{self.translated_title}**\n\n"
+            f"{self.translated_summary}"
+        )
+        return text
 
 
 class Translator(BasePlugin):
@@ -52,18 +58,26 @@ class Translator(BasePlugin):
             return self.translate_single(results)
 
     def translate_batch(self, results: list[Result]) -> list[Result]:
+        titles = [r.title for r in results if self.requires_translation(r)]
         summaries = [
             r.summary for r in results if self.requires_translation(r)
         ]
         results_to_translate = [
             r for r in results if self.requires_translation(r)
         ]
+        logger.info(f"Translating {len(titles)} titles...")
+        translated_titles = self.agent.complete_batches([
+            f"Given the following text:\n\n{t}\n\n{translation_instruction()}"
+            for t in titles
+        ])
         logger.info(f"Translating {len(summaries)} summaries...")
-        translations = self.agent.complete_batches([
+        translated_summaries = self.agent.complete_batches([
             f"Given the following text:\n\n{s}\n\n{translation_instruction()}"
             for s in summaries
         ])
-        for result, translation in zip(results_to_translate, translations):
+        for result, title, translation in zip(results_to_translate,
+                                              translated_titles,
+                                              translated_summaries):
             plugin = result.local_plugin_data.get(plugin_name(), None)
             if plugin is None:
                 result.add_plugin_data(TranslatorData(model=self.agent.model))
@@ -71,7 +85,8 @@ class Translator(BasePlugin):
                 plugin = TranslatorData(**plugin)
                 result.local_plugin_data[plugin_name()] = plugin
             plugin: TranslatorData = result.local_plugin_data[plugin_name()]
-            plugin.chinese_summary = translation
+            plugin.translated_summary = translation
+            plugin.translated_title = title
         return results
 
     def translate_single(self, results: list[Result]) -> list[Result]:
@@ -93,7 +108,7 @@ class Translator(BasePlugin):
             if plugin is None:
                 result.add_plugin_data(TranslatorData(model=self.agent.model))
             plugin: TranslatorData = result.local_plugin_data[plugin_name()]
-            plugin.chinese_summary = translation
+            plugin.translated_summary = translation
         return results
 
     def requires_translation(self, result: Result) -> bool:
