@@ -49,7 +49,7 @@ class MarkdownTableMaker(BasePlugin):
             )
             code_link: str = plugin.code_link if plugin else ""
             row = [
-                str(idx),
+                str(idx + 1),
                 f"[[#{result.title}]]",
                 result.primary_category,
                 result.entry_id,

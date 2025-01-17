@@ -47,6 +47,13 @@ dv.table(["#_hide_header ", "#_hide_header ", "#_hide_header "],
 
 """
 
+METAINFO_TEMPLATE = (
+    "---\n"
+    "DONE: false\n"
+    "counts: {counts}\n"
+    "---\n\n"
+)
+
 
 @dataclass
 class ResultSaverData(BasePluginData):
@@ -93,9 +100,7 @@ class ResultSaver(BasePlugin):
         path = os.path.join(self.markdown_directory, 'papers.md')
         logger.info(f"Saving markdown table to {path}")
         with open(path, 'w') as fp:
-            fp.write("---\n"
-                     + f"counts: {len(results)}\n"
-                     + "---\n\n")
+            fp.write(METAINFO_TEMPLATE.format(counts=len(results)))
             fp.write(markdown_table)
 
     def save_text(self, results: list[Result]):
@@ -167,9 +172,7 @@ class ResultSaver(BasePlugin):
         plugin_data = GlobalPluginData()
         markdown_plugin(filtered_results, plugin_data)
         table: str = plugin_data.data[MarkdownTableMakerData.plugin_name]
-        content: str = ("---\n"
-                        + f"counts: {len(filtered_results)}\n"
-                        + "---\n\n"
+        content: str = (METAINFO_TEMPLATE.format(counts=len(filtered_results))
                         + table
                         + "\n\n"
                         + paper_infos)
@@ -228,9 +231,7 @@ class ResultSaverByDefaultKeywordParser(BasePlugin):
         path = os.path.join(self.markdown_directory, 'papers.md')
         logger.info(f"Saving markdown table to {path}")
         with open(path, 'w') as fp:
-            fp.write("---\n"
-                     + f"counts: {len(results)}\n"
-                     + "---\n\n")
+            fp.write(METAINFO_TEMPLATE.format(counts=len(results)))
             fp.write(markdown_table)
 
     def save_text(self, results: list[Result]):
@@ -275,9 +276,7 @@ class ResultSaverByDefaultKeywordParser(BasePlugin):
         global_plugin = GlobalPluginData()
         markdown_plugin(filtered_results, global_plugin)
         table: str = global_plugin.data[MarkdownTableMakerData.plugin_name]
-        content: str = ("---\n"
-                        + f"counts: {len(filtered_results)}\n"
-                        + "---\n\n"
+        content: str = (METAINFO_TEMPLATE.format(counts=len(filtered_results))
                         + table
                         + "\n\n"
                         + paper_infos)
