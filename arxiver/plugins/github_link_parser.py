@@ -44,7 +44,7 @@ class GitHubLinkParser(BasePlugin):
     def parse_github_link(self, text: str | None) -> str:
         if text is None:
             return ""
-        pattern = r'https?:\/\/(?:www\.)?github\.com\/[\w-]+\/[\w-]+|(?:www\.)?github\.com\/[\w-]+\/[\w-]+'  # noqa
+        pattern = r'https?:\/\/(?:www\.)?github\.com\/[\w-]+\/[\w-]+|(?:www\.)?github\.com\/[\w-]+\/[\w-]+|(?:www\.)?.*github\.io\/[\w-]+\/[\w-]+|https?:\/\/(?:www\.)?.*github\.io\/[\w-]+\/[\w-]+'  # noqa
         matches: list[str] = re.findall(pattern, text)
         if len(matches) == 0:
             return ""
