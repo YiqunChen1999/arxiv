@@ -38,6 +38,7 @@ class GitHubLinkParser(BasePlugin):
                 self.parse_github_link(result.summary)
                 or self.parse_github_link(result.comment)
             )
+            result.metainfo.code_link = plugin_data.code_link
         return results
 
     def parse_github_link(self, text: str | None) -> str:
