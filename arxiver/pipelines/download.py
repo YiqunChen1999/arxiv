@@ -10,4 +10,4 @@ class Download(BasePipeline):
 
     @property
     def default_plugins(self):
-        return ["ArxivParserFromJsonFile", "Downloader"]
+        return ["ArxivParserFromJsonFile", "GitHubLinkParser", "Downloader"]

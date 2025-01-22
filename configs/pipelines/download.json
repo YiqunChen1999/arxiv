@@ -1,5 +1,5 @@
 {
     "plugins": [
-        "ArxivParserFromJsonFile", "Downloader"
+        "ArxivParserFromJsonFile", "GitHubLinkParser", "Downloader"
     ]
 }

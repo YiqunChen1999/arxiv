@@ -330,7 +330,7 @@ def prepare_markdown_content(
     else:
         # abspath = osp.abspath(osp.join(download_directory, filename))
         # abspath = "file://" + abspath.replace(" ", "%20")
-        path = osp.join("../../Papers")
+        path = osp.join("../../Papers", filename)
         temp = PAPER_NOTE_TEMPLATE.format(filename, path)
     content = meta + OBSIDIAN_NAVIGATION + temp
     return content
