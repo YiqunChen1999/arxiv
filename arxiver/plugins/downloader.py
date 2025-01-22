@@ -61,7 +61,7 @@ PAPER_NOTE_TEMPLATE = """
 
 # 1. 论文笔记
 ## 1.0. 本地文件
-[{}](<{}>)
+[{}]({})
 
 ## 1.1. 文章摘要
 
@@ -328,9 +328,10 @@ def prepare_markdown_content(
              .replace("\\mnt\\h", "file:///H:")
              .replace("\\mnt\\i", "file:///I:")))
     else:
-        abspath = osp.abspath(osp.join(download_directory, filename))
-        abspath = "file://" + abspath.replace(" ", "%20")
-        temp = PAPER_NOTE_TEMPLATE.format(filename, abspath)
+        # abspath = osp.abspath(osp.join(download_directory, filename))
+        # abspath = "file://" + abspath.replace(" ", "%20")
+        path = osp.join("../../Papers")
+        temp = PAPER_NOTE_TEMPLATE.format(filename, path)
     content = meta + OBSIDIAN_NAVIGATION + temp
     return content
 
