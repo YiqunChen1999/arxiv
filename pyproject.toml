@@ -17,6 +17,8 @@ classifiers = [
 ]
 dependencies = [
     "arxiv",
+    "beautifulsoup",
+    "html5lib",
 ]
 
 [project.optional-dependencies]

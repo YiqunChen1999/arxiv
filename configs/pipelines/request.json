@@ -1,7 +1,19 @@
 {
     "plugins": [
-        "ArxivParser", "GitHubLinkParser", "DefaultKeywordsParser",
+        "CVFParser", "GitHubLinkParser", "DefaultKeywordsParser",
         "MarkdownTableMaker", "DownloadInformationCollector",
         "ResultSaverByDefaultKeywordParser", "DownloadedPaperIndexGenerator"
-    ]
+    ],
+    "configs": {
+        "CVFParser": {
+            "year": 2024,
+            "conference": "CVPR",
+            "output_directory": "outputs/CVPR/2024",
+            "num_requested": null
+        },
+        "ResultSaverByDefaultKeywordParser": {
+            "output_directory": "outputs/CVPR/2024",
+            "markdown_directory": "../../Notebook/journal/CVPR/2024"
+        }
+    }
 }

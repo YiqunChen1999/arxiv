@@ -205,6 +205,8 @@ class ResultSaverByDefaultKeywordParser(BasePlugin):
         super().__init__(version, dependencies, **kwargs)
         self.output_directory = output_directory
         self.markdown_directory = markdown_directory
+        os.makedirs(self.output_directory, exist_ok=True)
+        os.makedirs(self.markdown_directory, exist_ok=True)
 
     def process(self,
                 results: list[Result],
