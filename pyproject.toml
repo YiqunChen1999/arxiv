@@ -17,6 +17,7 @@ classifiers = [
 ]
 dependencies = [
     "arxiv",
+    "openreview-py",
     "beautifulsoup",
     "html5lib",
 ]
