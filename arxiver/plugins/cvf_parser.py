@@ -12,7 +12,6 @@ import os.path as osp
 
 import bs4
 import bibtexparser
-import arxiv
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 from bibtexparser.bibdatabase import BibDatabase
@@ -78,14 +77,14 @@ class CVFParser(BasePlugin):
                     published=date,
                     title=title,
                     authors=[
-                        arxiv.Result.Author(name=author)
+                        Result.Author(name=author)
                         for author in info["authors"].split(" and ")
                     ],
                     summary=info["abstract"],
                     journal_ref=info["booktitle"],
                     links=[
-                        arxiv.Result.Link(href=info["pdfurl"], title="pdf"),
-                        arxiv.Result.Link(href=url, title="html")
+                        Result.Link(href=info["pdfurl"], title="pdf"),
+                        Result.Link(href=url, title="html")
                     ],
                     comment=info["bibtex"],
                 )

@@ -6,14 +6,20 @@
     ],
     "configs": {
         "CVFParser": {
+            "year": 2023,
+            "conference": "ICCV",
+            "output_directory": "outputs/ICCV/2023",
+            "num_requested": null
+        },
+        "OpenReviewParser": {
             "year": 2024,
-            "conference": "CVPR",
-            "output_directory": "outputs/CVPR/2024",
+            "conference": "ICML",
+            "output_directory": "outputs/ICML/2024",
             "num_requested": null
         },
         "ResultSaverByDefaultKeywordParser": {
-            "output_directory": "outputs/CVPR/2024",
-            "markdown_directory": "../../Notebook/journal/CVPR/2024"
+            "output_directory": "outputs/ICML/2024",
+            "markdown_directory": "../../Notebook/journal/ICML/2024"
         }
     }
 }
