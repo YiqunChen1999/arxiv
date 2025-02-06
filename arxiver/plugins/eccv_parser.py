@@ -34,7 +34,7 @@ class ECCVParser(BasePlugin):
             conference: str,
             output_directory: str,
             paper_online_date: str,
-            max_retries: int = 3,
+            max_retries: int = 10,
             num_requested: int | None = None,
             version: str = "",
             dependencies: list[str] | None = None,
@@ -154,6 +154,8 @@ def parse_paper_info(
     bibref = soup.find(class_="bibref")
     if bibref:
         entries["bibref"] = bibref.get_text(strip=True).replace("<br>", "")
+    else:
+        entries["bibref"] = ""
     if entries["bibref"]:
         bib_data: BibDatabase = bibtexparser.loads(entries["bibref"])
         entries.update(bib_data.entries[0])
