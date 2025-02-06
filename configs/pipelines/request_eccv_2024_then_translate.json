@@ -1,0 +1,56 @@
+{
+    "plugins": [
+        "ECCVParser",
+        "GitHubLinkParser",
+        "DefaultKeywordsParser",
+        "MarkdownTableMaker",
+        "DownloadInformationCollector",
+        "ResultSaverByDefaultKeywordParser",
+        "TranslatorWithDefaultKeywordsParser",
+        "ResultSaverByDefaultKeywordParser",
+        "DownloadedPaperIndexGenerator"
+    ],
+    "configs": {
+        "ECCVParser": {
+            "year": 2024,
+            "conference": "ECCV",
+            "output_directory": "outputs/ECCV/2024",
+            "paper_online_date": "2024-09-30",
+            "num_requested": null
+        },
+        "ResultSaverByDefaultKeywordParser": {
+            "output_directory": "outputs/ECCV/2024",
+            "markdown_directory": "../../Notebook/journal/ECCV/2024"
+        },
+        "DefaultKeywordsParser": {
+            "keywords": {
+                "detect": ["detect", "detection"],
+                "segment": ["segment", "segmentation"]
+            },
+            "ignorance": {
+                "detect": [
+                    " disease ", " cancer ", " medical ", " polyp ", " lesion ",
+                    " mri ", " tumor ", " lidar ", " remote sens", " audio ", " video ",
+                    " tracking ", " video ", " 3d ", " point cloud", " covid-19 ",
+                    " vehicle", " Bird's Eye View ", " BEV ", " surgery ", " Cardiac ",
+                    " deepfake ", " out-of-distribution ", " toxicity ", " speech ",
+                    " fraud ", " traffic ", " salient object ", " self-driving ",
+                    " emotion ", " anomaly ", " Meningeal ", " Lymphatic ", " Vessel ",
+                    " music ", " clinical ", " economist", " Jailbreak ", " Vessel ",
+                    " Clinical ", " Spatiotemporal ", "Crack Segmentation"
+                ],
+                "segment": [
+                    " disease ", " cancer ", " medical ", " polyp ", " lesion ",
+                    " mri ", " tumor ", " lidar ", " remote sens", " audio ", " video ",
+                    " tracking ", " video ", " 3d ", " point cloud", " covid-19 ",
+                    " vehicle", " Bird's Eye View ", " BEV ", " surgery ", " Cardiac ",
+                    " deepfake ", " out-of-distribution ", " toxicity ", " speech ",
+                    " fraud ", " traffic ", " salient object ", " self-driving ",
+                    " emotion ", " anomaly ", " Meningeal ", " Lymphatic ", " Vessel ",
+                    " music ", " clinical ", " economist", " Jailbreak ", " Vessel ",
+                    " Clinical ", " Spatiotemporal ", "Crack Segmentation"
+                ]
+            }
+        }
+    }
+}

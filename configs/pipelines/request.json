@@ -7,8 +7,8 @@
     "configs": {
         "CVFParser": {
             "year": 2023,
-            "conference": "ICCV",
-            "output_directory": "outputs/ICCV/2023",
+            "conference": "CVPR",
+            "output_directory": "outputs/CVPR/2023",
             "num_requested": null
         },
         "OpenReviewParser": {
