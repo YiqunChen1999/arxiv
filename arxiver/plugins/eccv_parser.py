@@ -13,7 +13,7 @@ import os.path as osp
 import bs4
 import bibtexparser
 from tqdm import tqdm
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from bibtexparser.bibdatabase import BibDatabase
 
 from arxiver.utils.logging import create_logger
@@ -24,71 +24,79 @@ from arxiver.base.plugin import (
 
 
 logger = create_logger(__name__)
-BASE_URL = "https://openaccess.thecvf.com"
+BASE_URL = "https://www.ecva.net"
 
 
-class CVFParser(BasePlugin):
+class ECCVParser(BasePlugin):
     def __init__(
             self,
             year: int,
             conference: str,
             output_directory: str,
+            paper_online_date: str,
             max_retries: int = 3,
             num_requested: int | None = None,
             version: str = "",
             dependencies: list[str] | None = None,
             **kwargs) -> None:
         super().__init__(version, dependencies, **kwargs)
+        conference = "ECCV"
+        if year % 2 != 0:
+            logger.warning("ECCV is held every even year.")
         self.year = year
         self.conference = conference
         self.output_directory = output_directory
+        self.paper_online_date = paper_online_date
         self.max_retries = max_retries
         self.num_requested = num_requested
-        self.url = osp.join(BASE_URL, f"{conference}{year}?day=all")
+        self.url = "https://www.ecva.net/papers.php"
         os.makedirs(self.output_directory, exist_ok=True)
 
     def process(self,
                 results: list[Result],
                 global_plugin_data: GlobalPluginData):
-        date = self.get_conference_date()
-        date = datetime.datetime.strptime(date, "%Y-%m-%d")
+        date = datetime.datetime.strptime(self.paper_online_date, "%Y-%m-%d")
         soup = request_html_content(
             self.url,
-            cache_file=osp.join(self.output_directory, "paper_list.html"),
+            cache_file=osp.join(
+                self.output_directory, f"eccv_{self.year}_paper_list.html"
+            ),
             max_retries=self.max_retries,
         )
         paper_folder = osp.join(self.output_directory, "papers")
         os.makedirs(paper_folder, exist_ok=True)
         count = 0
-        pbar = tqdm(soup.find_all("dt", class_="ptitle"))
+        pbar = tqdm(soup.select(f'dt.ptitle a[href*="eccv_{self.year}"]'))
         for dt in pbar:
             if self.num_requested and count >= self.num_requested:
                 break
-            a: bs4.element.Tag = dt.find("a")
-            if a:
-                url: str = a["href"]  # type: ignore
-                url = osp.join(BASE_URL, url.lstrip("/"))
-                cache_path = osp.join(paper_folder, osp.basename(url))
-                info = parse_paper_info(url, cache_file=cache_path)
-                title = a.text
-                result = Result(
-                    entry_id=url,
-                    updated=date,
-                    published=date,
-                    title=title,
-                    authors=[
-                        Result.Author(name=author)
-                        for author in info["authors"].split(" and ")
-                    ],
-                    summary=info["abstract"],
-                    journal_ref=info["booktitle"],
-                    links=[
-                        Result.Link(href=info["pdfurl"], title="pdf"),
-                        Result.Link(href=url, title="html")
-                    ],
-                    comment=info["bibtex"],
-                )
-                results.append(result)
+            if not dt:
+                continue
+            url: str = dt["href"]  # type: ignore
+            url = osp.join(BASE_URL, url.lstrip("/"))
+            cache_path = osp.join(paper_folder, osp.basename(url))
+            info = parse_paper_info(url, cache_file=cache_path)
+            result = Result(
+                entry_id=url,
+                updated=date,
+                published=date,
+                title=info["title"],
+                authors=[
+                    Result.Author(name=author.strip())
+                    for author in info["authors"]
+                ],
+                summary=info["abstract"],
+                journal_ref=self.conference,
+                links=[
+                    Result.Link(href=info["pdf"], title="pdf"),
+                    Result.Link(href=url, title="html"),
+                    Result.Link(href=info["supplementary"],
+                                title="supplementary"),
+                    Result.Link(href=info["doi"], title="doi"),
+                ],
+                comment=info["bibtex"],
+            )
+            results.append(result)
             count += 1
         return results
 
@@ -113,53 +121,48 @@ def parse_paper_info(
         cache_file: str | None = None,
         max_retries: int = 3,
         sleep_time: int = 1) -> dict[str, str]:
+    entries = {}
     soup = request_html_content(url, cache_file, max_retries, sleep_time)
-    abstract = soup.find(id="abstract")
-    if abstract:
-        abstract = abstract.text.strip()
-    else:
-        abstract = ""
-        logger.warning_once(
-            f"Abstract not found for {url}, abstract: {abstract}"
-        )
-    pdf = soup.find("a", string=lambda x: x and "pdf" in x.lower())  # type: ignore # noqa
-    if pdf:
-        pdfurl: str = pdf["href"].lstrip("/")  # type: ignore # noqa
-    else:
-        pdfurl = ""
-        logger.warning_once(
-            f"PDF link not found for {url}, pdf url: {pdfurl}"
-        )
-    if pdfurl:
-        if pdfurl.startswith("/"):
-            pdfurl: str = osp.join(BASE_URL, pdfurl.lstrip("/"))
+    ids = ("papertitle", "abstract", "authors")
+    entries.update({i: "" for i in ids})
+    for i in ids:
+        tag = soup.find(id=i)
+        if not tag:
+            logger.warning_once(f"{i} not found for {url}, {i}: {tag}")
+            continue
+        if i == "authors":
+            entries[i] = tag.get_text(strip=True).replace(";", "").split(",")
         else:
-            pdfurl = osp.join(osp.dirname(url), pdfurl)
-    else:
-        pdfurl = ""
-        logger.warning_once(
-            f"PDF url not found for {url}, pdf url: {pdfurl}"
-        )
-    bibtex = soup.find(class_="bibref pre-white-space")
-    if bibtex:
-        bib_data: BibDatabase = bibtexparser.loads(
-            bibtex.text.replace("<br>", "")
-        )
-        bibtex = bibtex.text
-        entries: dict[str, str] = bib_data.entries[0]
-    else:
-        bibtex = ""
-        entries = {}
-    return {
-        "title": entries.get("title", ""),
-        "authors": entries.get("author", ""),
-        "abstract": abstract,
-        "pdfurl": pdfurl,
-        "year": entries.get("year", ""),
-        "month": entries.get("month", ""),
-        "bibtex": bibtex,
-        "booktitle": entries.get("booktitle", ""),
-    }
+            entries[i.replace("paper", "")] = tag.get_text(strip=True)
+
+    links: bs4.ResultSet[Tag] = soup.find_all("a")
+    ids = ("pdf", "supplementary", "doi")
+    entries.update({i: "" for i in ids})
+    for link in links:
+        if not link:
+            continue
+        for i in ids:
+            if i in link.get_text().lower():
+                entries[i] = link["href"]
+                if i != "doi":
+                    urltxt: str = entries[i]
+                    if urltxt.startswith("/"):
+                        entries[i] = osp.join(BASE_URL, urltxt.lstrip("/"))
+                    else:
+                        entries[i] = osp.join(osp.dirname(url), urltxt)
+                break
+    bibref = soup.find(class_="bibref")
+    if bibref:
+        entries["bibref"] = bibref.get_text(strip=True).replace("<br>", "")
+    if entries["bibref"]:
+        bib_data: BibDatabase = bibtexparser.loads(entries["bibref"])
+        entries.update(bib_data.entries[0])
+        _authors: str = entries["author"]
+        authors = _authors.split(" and ")
+        authors = [" ".join(author.split(", ")[::-1]) for author in authors]
+        entries["author"] = authors
+    entries["bibtex"] = entries["bibref"]
+    return entries
 
 
 def request_html_content(
@@ -194,12 +197,13 @@ def request_html_content(
 
 
 if __name__ == "__main__":
-    request_html_content(
-        osp.join(BASE_URL, "CVPR2024?day=2024-06-21"),
-        "tmp/result.txt",
-    )
-    parser = CVFParser(
-        year=2024, conference="CVPR", output_directory="tmp"
+    # request_html_content(
+    #     osp.join(BASE_URL, "CVPR2024?day=2024-06-21"),
+    #     "tmp/result.txt",
+    # )
+    parser = ECCVParser(
+        year=2018, conference="ECCV", output_directory="tmp",
+        paper_online_date="2018-09-01"
     )
     global_plugin_data = GlobalPluginData()
     parser([], global_plugin_data)

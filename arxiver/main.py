@@ -14,7 +14,8 @@ def main():
     logger.info(f"{cfgs}")
     if cfgs.pipeline:
         pipeline_cls = get_pipeline_cls(cfgs.pipeline)
-        pipe_json_path = get_class_config_file_path(pipeline_cls)
+        pipe_json_path = get_class_config_file_path(
+            pipeline_cls, cfgs.pipeline_config)
         pipeline = pipeline_cls(pipe_json_path)
         pipeline(cfgs)
     else:

@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import inspect
+import os.path as osp
 
 from arxiver.config import Configs
 from arxiver.utils.io import load_json
@@ -52,7 +53,8 @@ def forward_plugins_once(
     return results
 
 
-def prepare_plugins_args_from_configs(cfgs, plugin_names: list[str], cls):
+def prepare_plugins_args_from_configs(
+        cfgs: Configs, plugin_names: list[str], cls):
     signature = inspect.signature(cls)
     args = {}
     cfg_path = get_class_config_file_path(cls)
@@ -92,12 +94,14 @@ def verify_plugin_dependencies(plugin_names: list[str], cls, args: dict):
                 )
 
 
-def get_class_config_file_path(cls):
+def get_class_config_file_path(cls, file_name: str = ""):
     json_path = (
         get_class_file_path(cls)
         .replace("py", "json")
         .replace("arxiver", "configs")
     )
+    if file_name:
+        json_path = osp.join(osp.dirname(json_path), file_name)
     return json_path
 
 

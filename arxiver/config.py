@@ -56,6 +56,16 @@ class Configs:
     pipeline: str = field(
         default=DEFAULT.get('pipeline', ""),
         metadata={"help": "Run a pre-defined collection of plugins."})
+    pipeline_config: str = field(
+        default="",
+        metadata={
+            "help": (
+                "Which config should be used by pipeline. If not set, "
+                "the config with the same name of .py file of target pipeline "
+                "will be used. The value is the file name under the folder"
+                "`configs/pipelines`."
+            )
+        })
 
     def __post_init__(self):
         self.datetime = parse_date(self.datetime)
@@ -68,6 +78,8 @@ class Configs:
                                            self.datetime.split('[')[1][:8])
         os.makedirs(self.output_directory, exist_ok=True)
         os.makedirs(self.markdown_directory, exist_ok=True)
+        if self.pipeline_config and not self.pipeline_config.endswith(".json"):
+            self.pipeline_config += ".json"
 
     def __str__(self) -> str:
         string = "Configs:\n"
