@@ -11,8 +11,8 @@ class Request(BasePipeline):
     @property
     def default_plugins(self):
         return [
-            "ArxivParser", "GitHubLinkParser", "DefaultKeywordsParser",
+            "ArxivParser", "GitHubLinkParser", "DefaultKeywordsFilter",
             "MarkdownTableMaker", "DownloadInformationCollector",
-            "ResultSaverByDefaultKeywordParser",
+            "ResultSaverByDefaultKeywordsFilter",
             "DownloadedPaperIndexGenerator",
         ]

@@ -1,6 +1,6 @@
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -33,3 +33,13 @@ class BasePlugin(ABC):
 
     def __call__(self, results, global_plugin_data: GlobalPluginData):
         return self.process(results, global_plugin_data)
+
+
+@dataclass
+class BaseKeywordsFilterData(BasePluginData):
+    plugin_name: str
+    keywords: list[str] = field(default_factory=list)
+    ignorance: list[str] = field(default_factory=list)
+
+    def string_for_saving(self, *args, **kwargs) -> str:
+        return f"- keywords: {', '.join(self.keywords)}"

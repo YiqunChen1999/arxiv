@@ -2,10 +2,12 @@
 from dataclasses import dataclass
 
 from arxiver.utils.logging import create_logger
-from arxiver.base.plugin import BasePlugin, BasePluginData, GlobalPluginData
+from arxiver.base.plugin import (
+    BasePlugin, BasePluginData, BaseKeywordsFilterData, GlobalPluginData
+)
 from arxiver.base.result import Result
 from arxiver.core.agent import Agent
-from arxiver.plugins.default_keywords_parser import DefaultKeywordsParserData
+from arxiver.plugins.default_keywords_filter import DefaultKeywordsFilterData
 
 
 logger = create_logger(__name__)
@@ -41,10 +43,18 @@ class TranslatorData(BasePluginData):
 
 
 class Translator(BasePlugin):
-    def __init__(self, model: str, batch_mode: bool = True, prompt: str = ""):
+    def __init__(
+            self,
+            model: str,
+            batch_mode: bool = True,
+            prompt: str = "",
+            translate_all_results: bool = False,
+            keywords_filter_plugin: str = ""):
         self.agent = Agent(model)
         self.batch_mode = batch_mode
         self.prompt = prompt or translation_instruction()
+        self.translate_all_results = translate_all_results
+        self.keywords_filter_plugin = keywords_filter_plugin
 
     def process(self,
                 results: list[Result],
@@ -112,10 +122,23 @@ class Translator(BasePlugin):
         return results
 
     def requires_translation(self, result: Result) -> bool:
-        return True
+        if self.translate_all_results:
+            return True
+        plugin_data: BaseKeywordsFilterData = (
+            result.local_plugin_data.get(self.keywords_filter_plugin, None)
+        )
+        translate = False
+        if plugin_data and len(plugin_data.keywords) > 0:
+            for keyword in plugin_data.keywords:
+                if keyword in plugin_data.ignorance:
+                    translate = False
+                    break
+            else:
+                translate = True
+        return translate
 
 
-class TranslatorWithDefaultKeywordsParser(Translator):
+class TranslatorWithDefaultKeywordsFilter(Translator):
     def __init__(self,
                  model: str,
                  batch_mode: bool = True,
@@ -131,9 +154,9 @@ class TranslatorWithDefaultKeywordsParser(Translator):
     def requires_translation(self, result: Result):
         if self.translate_all_results:
             return True
-        plugin_data: DefaultKeywordsParserData = (
+        plugin_data: DefaultKeywordsFilterData = (
             result.local_plugin_data.get(
-                DefaultKeywordsParserData.plugin_name, None
+                DefaultKeywordsFilterData.plugin_name, None
             )
         )
         translate = False

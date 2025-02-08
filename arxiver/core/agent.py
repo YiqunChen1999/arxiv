@@ -1,5 +1,7 @@
 
 import os
+import json
+import hashlib
 from time import sleep
 from dataclasses import dataclass
 
@@ -102,10 +104,12 @@ class Agent:
         model_kwarg.update(kwargs)
         batch_items = create_batch_items(
             messages, self.config.endpoint, self.config.model, **model_kwarg)
-        jsonl_path = "tmp/.agent.batch.inp.jsonl"
-        jsonl_path = save_jsonl(jsonl_path, batch_items)
+        serialized = json.dumps(batch_items, sort_keys=True).encode("utf-8")
+        sha = hashlib.sha256(serialized).hexdigest()
+        inp_jsonl_path = f"tmp/.agent.batch.inp.{sha}.jsonl"
+        inp_jsonl_path = save_jsonl(inp_jsonl_path, batch_items)
         task_file = self.client.files.create(
-            file=open(jsonl_path, "rb"), purpose="batch",
+            file=open(inp_jsonl_path, "rb"), purpose="batch",
         )
         logger.info(f"Create task with id {task_file.id}")
         batch_task = self.client.batches.create(
@@ -133,8 +137,9 @@ class Agent:
         if job.status not in ("completed",) or not job.output_file_id:
             return []
         content = self.client.files.content(job.output_file_id)
-        content.write_to_file("tmp/.agent.batch.out.jsonl")
-        finished = load_jsonl("tmp/.agent.batch.out.jsonl")
+        out_jsonl_path = f"tmp/.agent.batch.out.{sha}.jsonl"
+        content.write_to_file(out_jsonl_path)
+        finished = load_jsonl(out_jsonl_path)
         responses = {
             r["custom_id"]: (r["response"]["body"]["choices"]
                              [0]["message"]["content"])
@@ -154,6 +159,20 @@ class Agent:
         except Exception as e:
             logger.info(
                 f"Failed to delete output file {job.output_file_id}, {e}")
+        try:
+            logger.info(f"Deleting local cache file {inp_jsonl_path}")
+            os.remove(inp_jsonl_path)
+        except Exception as e:
+            logger.info(
+                f"Failed to delete local cache file {inp_jsonl_path}\n{e}"
+            )
+        try:
+            logger.info(f"Deleting local cache file {out_jsonl_path}")
+            os.remove(out_jsonl_path)
+        except Exception as e:
+            logger.info(
+                f"Failed to delete local cache file {out_jsonl_path}\n{e}"
+            )
         return responses
 
 

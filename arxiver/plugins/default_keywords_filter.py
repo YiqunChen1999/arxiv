@@ -1,7 +1,9 @@
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from arxiver.utils.logging import create_logger
-from arxiver.base.plugin import BasePlugin, BasePluginData, GlobalPluginData
+from arxiver.base.plugin import (
+    BasePlugin, BaseKeywordsFilterData, GlobalPluginData
+)
 from arxiver.base.result import Result
 
 
@@ -9,20 +11,15 @@ logger = create_logger(__name__)
 
 
 def plugin_name():
-    return "DefaultKeywordsParser"
+    return "DefaultKeywordsFilter"
 
 
 @dataclass
-class DefaultKeywordsParserData(BasePluginData):
+class DefaultKeywordsFilterData(BaseKeywordsFilterData):
     plugin_name: str = plugin_name()
-    keywords: list[str] = field(default_factory=list)
-    ignorance: list[str] = field(default_factory=list)
-
-    def string_for_saving(self, *args, **kwargs) -> str:
-        return f"- keywords: {', '.join(self.keywords)}"
 
 
-class DefaultKeywordsParser(BasePlugin):
+class DefaultKeywordsFilter(BasePlugin):
     """
     This plugin is used to parse keywords from the results.
 
@@ -53,8 +50,9 @@ class DefaultKeywordsParser(BasePlugin):
         >>> ignorance = {
         ...     "keyword1": ["subkeyword5", "subkeyword6"]
         ... }
-        >>> plugin = DefaultKeywordsParser(keywords, ignorance)
+        >>> plugin = DefaultKeywordsFilter(keywords, ignorance)
     """
+
     def __init__(self,
                  keywords: dict[str, list[str]] | None = None,
                  ignorance: dict[str, list[str]] | None = None,
@@ -70,14 +68,14 @@ class DefaultKeywordsParser(BasePlugin):
                 global_plugin_data: GlobalPluginData) -> list[Result]:
         for result in results:
             if plugin_name() not in result.local_plugin_data:
-                result.add_plugin_data(DefaultKeywordsParserData())
+                result.add_plugin_data(DefaultKeywordsFilterData())
         results = self.process_keywords(results)
         results = self.process_ignorance(results)
         return results
 
     def process_keywords(self, results: list[Result]):
         for result in results:
-            plugin_data: DefaultKeywordsParserData = (
+            plugin_data: DefaultKeywordsFilterData = (
                 result.local_plugin_data[plugin_name()]
             )
             for keyword in self.keywords.keys():
@@ -90,7 +88,7 @@ class DefaultKeywordsParser(BasePlugin):
 
     def process_ignorance(self, results: list[Result]):
         for result in results:
-            plugin_data: DefaultKeywordsParserData = (
+            plugin_data: DefaultKeywordsFilterData = (
                 result.local_plugin_data[plugin_name()]
             )
             for keyword in self.ignorance.keys():
@@ -107,8 +105,8 @@ class DefaultKeywordsParser(BasePlugin):
 def parse_keywords_for_results(results: list[Result], keywords: list[str]):
     for result in results:
         if plugin_name() not in result.local_plugin_data:
-            result.add_plugin_data(DefaultKeywordsParserData())
-        plugin_data: DefaultKeywordsParserData = (
+            result.add_plugin_data(DefaultKeywordsFilterData())
+        plugin_data: DefaultKeywordsFilterData = (
             result.local_plugin_data[plugin_name()]
         )
         for keyword in keywords:
