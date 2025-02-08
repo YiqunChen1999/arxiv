@@ -18,11 +18,29 @@ def plugin_name():
 
 def default_prompt_template():
     return (
-        "Given the following title and abstract, please tell me if this paper "
-        "is related to {topic}. Please first analyze it and tell me whether "
-        "the result is TRUE or FALSE in the format: **RESULT: [YOUR RESULT]**."
-        "\n\n# Title\n{title}"
-        "\n\n# Abstract\n{abstract}"
+        ""
+        "# Task\n"
+        # Description
+        "## Description\n"
+        "You are given a research paper's title and abstract. Your task is to "
+        "determine whether the paper is **explicitly focused on** "
+        "the {topic}.\n\n"
+
+        # Requirements
+        "## Requirements\n"
+        "- Please first provide a clear analysis "
+        "based on the title and abstract;\n"
+
+        "- State your conclusion in the following format: "
+        "**RESULT: [YOUR RESULT]**, "
+        "where [YOUR RESULT] is either TRUE or FALSE;\n"
+
+        "- If you're uncertain about the result, return "
+        "**RESULT: TRUE** to avoid missing a possible relevant paper;\n\n"
+
+        # Title and Abstract
+        "# Title\n{title}"
+        "# Abstract{abstract}"
     )
 
 
@@ -52,16 +70,22 @@ class LanguageModelBasedKeywordsFilter(BasePlugin):
             self,
             model: str,
             batch_mode: bool,
-            topics: dict[str, str]):
+            concurrent_mode: bool,
+            topics: dict[str, str],
+            max_workers: int = 16,
+            max_tasks_per_minute: int = 16):
         self.agent = Agent(model)
         self.batch_mode = batch_mode
+        self.concurrent_mode = concurrent_mode
         self.topics = topics
+        self.max_workers = max_workers
+        self.max_tasks_per_minute = max_tasks_per_minute
 
     def process(
             self, results: list[Result], global_plugin_data: GlobalPluginData):
         for result in results:
             result.add_plugin_data(LanguageModelBasedKeywordsFilterData())
-        if self.batch_mode:
+        if self.batch_mode or self.concurrent_mode:
             return self.process_batch(results, global_plugin_data)
         else:
             return self.process_single(results, global_plugin_data)
@@ -82,7 +106,15 @@ class LanguageModelBasedKeywordsFilter(BasePlugin):
                 self.create_prompt(topic, r) for r in results_to_process
             ])
         logger.info("Sending prompts to the agent...")
-        responses = self.agent.complete_batches(prompts)
+        complete_method = (
+            self.agent.complete_batches if self.batch_mode
+            else self.agent.complete_concurrent
+        )
+        kwargs = {
+            "max_workers": self.max_workers,
+            "max_tasks_per_minute": self.max_tasks_per_minute,
+        }
+        responses = complete_method(prompts, **kwargs)
         logger.info("Processing responses...")
         keywords = list(self.topics.keys())
         for i, r in enumerate(responses):
@@ -92,6 +124,40 @@ class LanguageModelBasedKeywordsFilter(BasePlugin):
                     result.local_plugin_data[plugin_name()]
                 )
                 plugin.keywords.append(keywords[i // N])
+        return results
+
+    def process_concurrent(
+            self, results: list[Result], global_plugin_data: GlobalPluginData):
+        results_to_process = [
+            r for r in results if self.requires_processing(r)
+        ]
+        if len(results_to_process) == 0:
+            return results
+        N = len(results_to_process)
+        logger.info(f"Processing {N} results with concurrent")
+        prompts: list[str] = []
+        for keyword, topic in self.topics.items():
+            logger.info(f"Creating prompts related to {topic}...")
+            prompts.extend([
+                self.create_prompt(topic, r) for r in results_to_process
+            ])
+        logger.info("Sending prompts to the agent...")
+        responses = self.agent.complete_concurrent(prompts, self.max_workers)
+        logger.info("Processing responses...")
+        keywords = list(self.topics.keys())
+        for i, r in enumerate(responses):
+            result = results_to_process[i % N]
+            keyword = keywords[i // N]
+            topic = self.topics[keyword]
+            msg = f"{result.title} is related to {topic}"
+            if "**RESULT: TRUE**" in r or r == "":
+                plugin: LanguageModelBasedKeywordsFilterData = (
+                    result.local_plugin_data[plugin_name()]
+                )
+                plugin.keywords.append(keyword)
+                logger.info(f"TRUE: {msg}")
+            else:
+                logger.info(f"FALSE: {msg}")
         return results
 
     def process_single(

@@ -6,7 +6,7 @@
         "MarkdownTableMaker",
         "DownloadInformationCollector",
         "ResultSaverByDefaultKeywordsFilter",
-        "TranslatorWithDefaultKeywordsFilter",
+        "Translator",
         "ResultSaverByDefaultKeywordsFilter",
         "DownloadedPaperIndexGenerator"
     ],
@@ -20,6 +20,9 @@
         "ResultSaverByDefaultKeywordsFilter": {
             "output_directory": "outputs/CVPR/2024",
             "markdown_directory": "../../Notebook/journal/CVPR/2024"
+        },
+        "Translator": {
+            "keywords_filter_plugin": "DefaultKeywordsFilter"
         },
         "DefaultKeywordsFilter": {
             "keywords": {

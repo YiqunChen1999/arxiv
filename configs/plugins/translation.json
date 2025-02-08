@@ -1,6 +1,7 @@
 {
-    "model": "siliconflow-deepseek-v3-chat",
-    "batch_mode": true,
+    "model": "dashscope-deepseek-v3-latest",
+    "batch_mode": false,
+    "concurrent_mode": true,
     "translate_all_results": false,
     "prompt": "Directly translate the given text into Chinese. Don't output irrelevant contexts."
 }

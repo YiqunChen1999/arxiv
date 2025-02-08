@@ -6,7 +6,7 @@
         "MarkdownTableMaker",
         "DownloadInformationCollector",
         "ResultSaverByDefaultKeywordsFilter",
-        "TranslatorWithDefaultKeywordsFilter",
+        "Translator",
         "ResultSaverByDefaultKeywordsFilter",
         "DownloadedPaperIndexGenerator"
     ],
@@ -16,6 +16,9 @@
             "conference": "ICML",
             "output_directory": "outputs/ICML/2024",
             "num_requested": null
+        },
+        "Translator": {
+            "keywords_filter_plugin": "DefaultKeywordsFilter"
         },
         "ResultSaverByDefaultKeywordsFilter": {
             "output_directory": "outputs/ICML/2024",

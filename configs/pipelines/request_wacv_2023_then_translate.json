@@ -6,7 +6,7 @@
         "MarkdownTableMaker",
         "DownloadInformationCollector",
         "ResultSaverByDefaultKeywordsFilter",
-        "TranslatorWithDefaultKeywordsFilter",
+        "Translator",
         "ResultSaverByDefaultKeywordsFilter",
         "DownloadedPaperIndexGenerator"
     ],
@@ -16,6 +16,9 @@
             "conference": "WACV",
             "output_directory": "outputs/WACV/2023",
             "num_requested": null
+        },
+        "Translator": {
+            "keywords_filter_plugin": "DefaultKeywordsFilter"
         },
         "ResultSaverByDefaultKeywordsFilter": {
             "output_directory": "outputs/WACV/2023",

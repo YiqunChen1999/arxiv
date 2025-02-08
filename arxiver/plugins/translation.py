@@ -47,14 +47,20 @@ class Translator(BasePlugin):
             self,
             model: str,
             batch_mode: bool = True,
+            concurrent_mode: bool = False,
             prompt: str = "",
             translate_all_results: bool = False,
-            keywords_filter_plugin: str = ""):
+            keywords_filter_plugin: str = "",
+            max_workers: int = 16,
+            max_tasks_per_minute: int = 16):
         self.agent = Agent(model)
         self.batch_mode = batch_mode
+        self.concurrent_mode = concurrent_mode
         self.prompt = prompt or translation_instruction()
         self.translate_all_results = translate_all_results
         self.keywords_filter_plugin = keywords_filter_plugin
+        self.max_workers = max_workers
+        self.max_tasks_per_minute = max_tasks_per_minute
 
     def process(self,
                 results: list[Result],
@@ -62,7 +68,7 @@ class Translator(BasePlugin):
         if len(results) == 0:
             logger.warning("No results to translate.")
             return results
-        if self.batch_mode:
+        if self.batch_mode or self.concurrent_mode:
             return self.translate_batch(results)
         else:
             return self.translate_single(results)
@@ -76,15 +82,23 @@ class Translator(BasePlugin):
             r for r in results if self.requires_translation(r)
         ]
         logger.info(f"Translating {len(titles)} titles...")
-        translated_titles = self.agent.complete_batches([
+        kwargs = {
+            "max_workers": self.max_workers,
+            "max_tasks_per_minute": self.max_tasks_per_minute,
+        }
+        if self.batch_mode:
+            complete_method = self.agent.complete_batches
+        else:
+            complete_method = self.agent.complete_concurrent
+        translated_titles = complete_method([
             f"Given the following text:\n\n{t}\n\n{translation_instruction()}"
             for t in titles
-        ])
+        ], **kwargs)
         logger.info(f"Translating {len(summaries)} summaries...")
-        translated_summaries = self.agent.complete_batches([
+        translated_summaries = complete_method([
             f"Given the following text:\n\n{s}\n\n{translation_instruction()}"
             for s in summaries
-        ])
+        ], **kwargs)
         for result, title, translation in zip(results_to_translate,
                                               translated_titles,
                                               translated_summaries):
@@ -139,18 +153,6 @@ class Translator(BasePlugin):
 
 
 class TranslatorWithDefaultKeywordsFilter(Translator):
-    def __init__(self,
-                 model: str,
-                 batch_mode: bool = True,
-                 prompt: str = "",
-                 translate_all_results: bool = False):
-        super().__init__(
-            model=model,
-            batch_mode=batch_mode,
-            prompt=prompt,
-        )
-        self.translate_all_results = translate_all_results
-
     def requires_translation(self, result: Result):
         if self.translate_all_results:
             return True

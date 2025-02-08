@@ -2,8 +2,9 @@
 import os
 import json
 import hashlib
-from time import sleep
+from time import sleep, time
 from dataclasses import dataclass
+from concurrent.futures import ThreadPoolExecutor
 
 from openai import OpenAI
 from openai.types.chat.chat_completion import ChatCompletion
@@ -85,15 +86,19 @@ class Agent:
         messages.append({"role": "user", "content": message})
         model_kwarg = self.config.model_kwargs or {}
         model_kwarg.update(kwargs)
-        response: ChatCompletion = self.client.chat.completions.create(
-            messages=messages,  # type: ignore # openai handles this
-            model=self.config.model,
-            stream=stream,
-            **model_kwarg,
-        )
-        content = response.choices[0].message.content
-        if not isinstance(content, str):
-            raise ValueError(f"Invalid response content: {content}")
+        try:
+            response: ChatCompletion = self.client.chat.completions.create(
+                messages=messages,  # type: ignore # openai handles this
+                model=self.config.model,
+                stream=stream,
+                **model_kwarg,
+            )
+            content = response.choices[0].message.content
+            if not isinstance(content, str):
+                raise ValueError(f"Invalid response content: {content}")
+        except Exception as e:
+            logger.error(f"Failed to complete message: {message}\n{e}")
+            content = ""
         self.history.append(role="user", content=message)
         self.history.append(role="assistant", content=content)
         return content
@@ -174,6 +179,44 @@ class Agent:
                 f"Failed to delete local cache file {out_jsonl_path}\n{e}"
             )
         return responses
+
+    def complete_concurrent(
+            self,
+            messages: list[str],
+            max_workers: int = 16,
+            max_tasks_per_minute: int = 16,
+            **kwargs) -> list[str]:
+        # If no max_tasks_per_minute is provided or messages are fewer than
+        # the limit, process normally.
+        if len(messages) <= max_tasks_per_minute:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                results = list(executor.map(
+                    lambda msg: self.complete_single(msg, **kwargs), messages)
+                )
+            return results
+
+        # Otherwise, partition messages into batches and ensure each batch
+        # takes at least 60 seconds.
+        all_results = []
+        chunks = [
+            messages[i:i + max_tasks_per_minute]
+            for i in range(0, len(messages), max_tasks_per_minute)
+        ]
+        for chunk in chunks:
+            start_time = time()
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                batch_results = list(executor.map(
+                    lambda msg: self.complete_single(msg, **kwargs), chunk)
+                )
+            all_results.extend(batch_results)
+            elapsed = time() - start_time
+            if elapsed < 60:
+                logger.info(
+                    f"Sleeping for {60 - elapsed} seconds due to "
+                    f"the RPM limitation ({max_tasks_per_minute})..."
+                )
+                sleep(60 - elapsed)
+        return all_results
 
 
 def create_batch_items(messages: list[str], endpoint: str, model: str,
