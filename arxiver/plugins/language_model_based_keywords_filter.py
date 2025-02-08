@@ -1,5 +1,6 @@
 
 from dataclasses import dataclass
+
 from arxiver.utils.logging import create_logger
 from arxiver.base.plugin import (
     BasePlugin, BaseKeywordsFilterData, GlobalPluginData
@@ -103,10 +104,11 @@ class LanguageModelBasedKeywordsFilter(BasePlugin):
         N = len(results_to_process)
         logger.info(f"Processing {N} results in single...")
         for keyword, topic in self.topics.items():
+            logger.info(f"Processing {topic}...")
             for i, result in enumerate(results_to_process):
                 prompt = self.create_prompt(topic, result)
                 logger.info(
-                    f"Sending prompt to the agent: {i+1}-th/{N} paper..."
+                    f"Processing {i+1}-th of {N} paper of keyword {keyword}..."
                 )
                 response = self.agent.complete_single(prompt)
                 if "**RESULT: TRUE**" in response:
@@ -114,6 +116,9 @@ class LanguageModelBasedKeywordsFilter(BasePlugin):
                         result.local_plugin_data[plugin_name()]
                     )
                     plugin.keywords.append(keyword)
+                    logger.info(f"TRUE: Keyword {keyword} in {result.title}")
+                else:
+                    logger.info(f"FALSE: Keyword {keyword} in {result.title}")
         return results
 
     def create_prompt(self, topic: str, result: Result):
