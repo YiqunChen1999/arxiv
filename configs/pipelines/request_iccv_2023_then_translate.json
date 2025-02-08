@@ -2,12 +2,12 @@
     "plugins": [
         "CVFParser",
         "GitHubLinkParser",
-        "DefaultKeywordsParser",
+        "DefaultKeywordsFilter",
         "MarkdownTableMaker",
         "DownloadInformationCollector",
-        "ResultSaverByDefaultKeywordParser",
-        "TranslatorWithDefaultKeywordsParser",
-        "ResultSaverByDefaultKeywordParser",
+        "ResultSaverByDefaultKeywordsFilter",
+        "TranslatorWithDefaultKeywordsFilter",
+        "ResultSaverByDefaultKeywordsFilter",
         "DownloadedPaperIndexGenerator"
     ],
     "configs": {
@@ -17,11 +17,11 @@
             "output_directory": "outputs/ICCV/2023",
             "num_requested": null
         },
-        "ResultSaverByDefaultKeywordParser": {
+        "ResultSaverByDefaultKeywordsFilter": {
             "output_directory": "outputs/ICCV/2023",
             "markdown_directory": "../../Notebook/journal/ICCV/2023"
         },
-        "DefaultKeywordsParser": {
+        "DefaultKeywordsFilter": {
             "keywords": {
                 "detect": ["detect", "detection"],
                 "segment": ["segment", "segmentation"]

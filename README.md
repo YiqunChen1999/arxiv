@@ -83,9 +83,9 @@ For example, request all papers of interest from arXiv by modifying the `configs
 {
     ...,
     "plugins": [
-        "ArxivParser", "GitHubLinkParser", "DefaultKeywordsParser",
+        "ArxivParser", "GitHubLinkParser", "DefaultKeywordsFilter",
         "MarkdownTableMaker", "DownloadInformationCollector",
-        "ResultSaverByDefaultKeywordParser"
+        "ResultSaverByDefaultKeywordsFilter"
     ],
     ...
 }

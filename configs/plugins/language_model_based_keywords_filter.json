@@ -1,0 +1,8 @@
+{
+    "model": "siliconflow-deepseek-v3-chat",
+    "batch_mode": true,
+    "topics": {
+        "detect": "object detection task of 2D images",
+        "segment": "image segmentation task of 2D images"
+    }
+}

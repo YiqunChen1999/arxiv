@@ -1,8 +1,8 @@
 {
     "plugins": [
-        "CVFParser", "GitHubLinkParser", "DefaultKeywordsParser",
+        "CVFParser", "GitHubLinkParser", "DefaultKeywordsFilter",
         "MarkdownTableMaker", "DownloadInformationCollector",
-        "ResultSaverByDefaultKeywordParser", "DownloadedPaperIndexGenerator"
+        "ResultSaverByDefaultKeywordsFilter", "DownloadedPaperIndexGenerator"
     ],
     "configs": {
         "CVFParser": {
@@ -17,7 +17,7 @@
             "output_directory": "outputs/ICML/2024",
             "num_requested": null
         },
-        "ResultSaverByDefaultKeywordParser": {
+        "ResultSaverByDefaultKeywordsFilter": {
             "output_directory": "outputs/ICML/2024",
             "markdown_directory": "../../Notebook/journal/ICML/2024"
         }

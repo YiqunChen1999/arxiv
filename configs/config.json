@@ -9,9 +9,9 @@
     "download_directory": "../../Papers",
     "query": "",
     "plugins": [
-        "ArxivParser", "GitHubLinkParser", "DefaultKeywordsParser",
+        "ArxivParser", "GitHubLinkParser", "DefaultKeywordsFilter",
         "MarkdownTableMaker", "DownloadInformationCollector",
-        "ResultSaverByDefaultKeywordParser"
+        "ResultSaverByDefaultKeywordsFilter"
     ],
     ".plugins": [
         "ResultLoader", "MarkdownMetainfoParser", "Downloader"

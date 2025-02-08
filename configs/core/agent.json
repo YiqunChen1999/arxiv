@@ -1,5 +1,16 @@
 {
     "noset": {},
+    "siliconflow-deepseek-v3-chat": {
+        "base_url": "https://api.siliconflow.cn/v1/",
+        "endpoint": "/v1/chat/completions",
+        "model": "deepseek-ai/DeepSeek-V3",
+        "api_key": "SILICONFLOW_APIKEY",
+        "model_kwargs": {
+            "max_tokens": 4096,
+            "temperature": 0.7,
+            "top_p": 0.7
+        }
+    },
     "zhipuai-glm-4-flash": {
         "base_url": "https://open.bigmodel.cn/api/paas/v4/",
         "endpoint": "/v4/chat/completions",

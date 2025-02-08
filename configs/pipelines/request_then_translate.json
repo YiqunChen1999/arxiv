@@ -1,9 +1,13 @@
 {
     "plugins": [
-        "ArxivParser", "GitHubLinkParser", "DefaultKeywordsParser",
-        "MarkdownTableMaker", "DownloadInformationCollector",
-        "ResultSaverByDefaultKeywordParser",
-        "TranslatorWithDefaultKeywordsParser",
-        "ResultSaverByDefaultKeywordParser", "DownloadedPaperIndexGenerator"
+        "ArxivParser",
+        "GitHubLinkParser",
+        "DefaultKeywordsFilter",
+        "MarkdownTableMaker",
+        "DownloadInformationCollector",
+        "ResultSaverByDefaultKeywordsFilter",
+        "TranslatorWithDefaultKeywordsFilter",
+        "ResultSaverByDefaultKeywordsFilter",
+        "DownloadedPaperIndexGenerator"
     ]
 }
