@@ -82,10 +82,6 @@ class Translator(BasePlugin):
             r for r in results if self.requires_translation(r)
         ]
         logger.info(f"Translating {len(titles)} titles...")
-        kwargs = {
-            "max_workers": self.max_workers,
-            "max_tasks_per_minute": self.max_tasks_per_minute,
-        }
         if self.batch_mode:
             complete_method = self.agent.complete_batches
         else:
@@ -93,12 +89,12 @@ class Translator(BasePlugin):
         translated_titles = complete_method([
             f"Given the following text:\n\n{t}\n\n{translation_instruction()}"
             for t in titles
-        ], **kwargs)
+        ])
         logger.info(f"Translating {len(summaries)} summaries...")
         translated_summaries = complete_method([
             f"Given the following text:\n\n{s}\n\n{translation_instruction()}"
             for s in summaries
-        ], **kwargs)
+        ])
         for result, title, translation in zip(results_to_translate,
                                               translated_titles,
                                               translated_summaries):

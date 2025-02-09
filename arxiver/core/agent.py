@@ -23,10 +23,11 @@ class ModelConfig:
     model: str = ""
     api_key: str = ""
     model_kwargs: dict | None = None
+    request_setting: dict | None = None
 
     def __post_init__(self):
-        if self.model_kwargs is None:
-            self.model_kwargs = {}
+        self.model_kwargs = self.model_kwargs or {}
+        self.request_setting = self.request_setting or {}
 
 
 @dataclass
@@ -183,39 +184,38 @@ class Agent:
     def complete_concurrent(
             self,
             messages: list[str],
-            max_workers: int = 16,
-            max_tasks_per_minute: int = 16,
             **kwargs) -> list[str]:
-        # If no max_tasks_per_minute is provided or messages are fewer than
-        # the limit, process normally.
-        if len(messages) <= max_tasks_per_minute:
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        def request(messages: list[str]):
+            with ThreadPoolExecutor() as executor:
                 results = list(executor.map(
                     lambda msg: self.complete_single(msg, **kwargs), messages)
                 )
             return results
 
+        request_setting = self.config.request_setting or {}
+        requests_per_minute = request_setting.get("requests_per_minute", 64)
+        # If no max_tasks_per_minute is provided or messages are fewer than
+        # the limit, process normally.
+        if len(messages) <= requests_per_minute:
+            return request(messages)
+
         # Otherwise, partition messages into batches and ensure each batch
         # takes at least 60 seconds.
         all_results = []
         chunks = [
-            messages[i:i + max_tasks_per_minute]
-            for i in range(0, len(messages), max_tasks_per_minute)
+            messages[i:i + requests_per_minute]
+            for i in range(0, len(messages), requests_per_minute)
         ]
         for chunk in chunks:
             start_time = time()
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                batch_results = list(executor.map(
-                    lambda msg: self.complete_single(msg, **kwargs), chunk)
-                )
-            all_results.extend(batch_results)
-            elapsed = time() - start_time
-            if elapsed < 60:
+            all_results.extend(request(chunk))
+            sleep_time = 60 - (time() - start_time)
+            if sleep_time > 0:
                 logger.info(
-                    f"Sleeping for {60 - elapsed} seconds due to "
-                    f"the RPM limitation ({max_tasks_per_minute})..."
+                    f"Sleeping for {sleep_time} seconds due to "
+                    f"the RPM limitation ({requests_per_minute})..."
                 )
-                sleep(60 - elapsed)
+                sleep(sleep_time)
         return all_results
 
 

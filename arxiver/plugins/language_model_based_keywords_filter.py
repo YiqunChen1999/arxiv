@@ -110,11 +110,7 @@ class LanguageModelBasedKeywordsFilter(BasePlugin):
             self.agent.complete_batches if self.batch_mode
             else self.agent.complete_concurrent
         )
-        kwargs = {
-            "max_workers": self.max_workers,
-            "max_tasks_per_minute": self.max_tasks_per_minute,
-        }
-        responses = complete_method(prompts, **kwargs)
+        responses = complete_method(prompts)
         logger.info("Processing responses...")
         keywords = list(self.topics.keys())
         for i, r in enumerate(responses):
@@ -142,7 +138,7 @@ class LanguageModelBasedKeywordsFilter(BasePlugin):
                 self.create_prompt(topic, r) for r in results_to_process
             ])
         logger.info("Sending prompts to the agent...")
-        responses = self.agent.complete_concurrent(prompts, self.max_workers)
+        responses = self.agent.complete_concurrent(prompts)
         logger.info("Processing responses...")
         keywords = list(self.topics.keys())
         for i, r in enumerate(responses):
