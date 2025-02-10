@@ -2,6 +2,7 @@
     "plugins": [
         "ArxivParser",
         "GitHubLinkParser",
+        "DefaultKeywordsFilter",
         "LanguageModelBasedKeywordsFilter",
         "MarkdownTableMaker",
         "DownloadInformationCollector",

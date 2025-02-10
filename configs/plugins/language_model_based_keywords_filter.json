@@ -1,9 +1,13 @@
 {
-    "model": "dashscope-deepseek-v3-latest",
+    "model": "siliconflow-deepseek-v3",
     "batch_mode": false,
     "concurrent_mode": true,
-    "topics": {
+    "interested_topics": {
         "detect": "object detection task of 2D images",
         "segment": "image segmentation task of 2D images"
+    },
+    "discarded_topics": {
+        "detect": "3D related topics, medical related topics",
+        "segment": "3D related topics, medical related topics"
     }
 }
