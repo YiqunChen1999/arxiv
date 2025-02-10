@@ -1,5 +1,5 @@
 {
-    "model": "dashscope-deepseek-v3-latest",
+    "model": "zhipuai-glm-4-flash",
     "batch_mode": false,
     "concurrent_mode": true,
     "translate_all_results": false,

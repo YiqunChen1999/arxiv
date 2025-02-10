@@ -31,16 +31,19 @@ def default_prompt_template():
         "- Please first provide a clear analysis "
         "based on the title and abstract;\n"
 
+        "- You shouldn't try to guess the content not appear in "
+        "the provided text;\n"
+
         "- State your conclusion in the following format: "
         "**RESULT: [YOUR RESULT]**, "
         "where [YOUR RESULT] is either TRUE or FALSE;\n"
 
-        "- If you're uncertain about the result, return "
-        "**RESULT: TRUE** to avoid missing a possible relevant paper;\n\n"
+        "- If the paper does not fall into the interested scope, return "
+        "**RESULT: FALSE**;\n\n"
 
         # Title and Abstract
-        "# Title\n{title}"
-        "# Abstract{abstract}"
+        "# Title\n{title}\n\n"
+        "# Abstract\n{abstract}"
     )
 
 

@@ -55,12 +55,14 @@ sleep_until_time() {
 # sleep_seconds=$(get_sleep_seconds "2024-03-20 15:30")
 
 # endless loop
-while true; do
-    sleep_until_time "$wait_until_time"
+schedule_requests() {
+    # endless loop to schedule the job daily
+    while true; do
+        sleep_until_time "$wait_until_time"
+        run_job
+        # update wait_until_time to the next day
+        wait_until_time=$(date -v+1d -j -f "%Y-%m-%d %H:%M" "$wait_until_time" "+%Y-%m-%d %H:%M")
+    done
+}
 
-    # run the job
-    run_job
-
-    # wait until the next day
-    wait_until_time=$(date -v+1d -j -f "%Y-%m-%d %H:%M" "$wait_until_time" "+%Y-%m-%d %H:%M")
-done
+schedule_requests
