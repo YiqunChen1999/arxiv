@@ -1,5 +1,5 @@
 {
-    "model": "siliconflow-deepseek-v3",
+    "model": "dashscope-deepseek-v3-latest",
     "batch_mode": false,
     "concurrent_mode": true,
     "interested_topics": {

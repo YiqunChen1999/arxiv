@@ -3,11 +3,12 @@
         "CVFParser",
         "GitHubLinkParser",
         "DefaultKeywordsFilter",
+        "LanguageModelBasedKeywordsFilter",
         "MarkdownTableMaker",
         "DownloadInformationCollector",
-        "ResultSaverByDefaultKeywordsFilter",
+        "ResultSaver",
         "Translator",
-        "ResultSaverByDefaultKeywordsFilter",
+        "ResultSaver",
         "DownloadedPaperIndexGenerator"
     ],
     "configs": {
@@ -18,11 +19,12 @@
             "num_requested": null
         },
         "Translator": {
-            "keywords_filter_plugin": "DefaultKeywordsFilter"
+            "keywords_filter_plugin": "LanguageModelBasedKeywordsFilter"
         },
-        "ResultSaverByDefaultKeywordsFilter": {
+        "ResultSaver": {
             "output_directory": "outputs/WACV/2024",
-            "markdown_directory": "../../Notebook/journal/WACV/2024"
+            "markdown_directory": "../../Notebook/journal/WACV/2024",
+            "keywords_filter_plugin": "LanguageModelBasedKeywordsFilter"
         },
         "DefaultKeywordsFilter": {
             "keywords": {

@@ -11,7 +11,8 @@
             "top_p": 0.7
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 64,
+            "max_retries": 10
         }
     },
     "siliconflow-deepseek-r1": {
@@ -25,7 +26,8 @@
             "top_p": 0.7
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 64,
+            "max_retries": 10
         }
     },
     "siliconflow-deepseek-r1-distill-qwen-32b": {
@@ -39,7 +41,8 @@
             "top_p": 0.7
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 64,
+            "max_retries": 10
         }
     },
     "siliconflow-deepseek-r1-distill-qwen-14b": {
@@ -53,7 +56,8 @@
             "top_p": 0.7
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 64,
+            "max_retries": 10
         }
     },
     "siliconflow-deepseek-r1-distill-qwen-7b": {
@@ -67,7 +71,8 @@
             "top_p": 0.7
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 64,
+            "max_retries": 10
         }
     },
     "siliconflow-deepseek-r1-distill-llama-70b": {
@@ -81,7 +86,8 @@
             "top_p": 0.7
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 64,
+            "max_retries": 10
         }
     },
     "siliconflow-deepseek-r1-distill-llama-8b": {
@@ -95,7 +101,8 @@
             "top_p": 0.7
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 64,
+            "max_retries": 10
         }
     },
     "dashscope-qwen-max-latest": {
@@ -109,7 +116,8 @@
             "top_p": 0.7
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 64,
+            "max_retries": 10
         }
     },
     "dashscope-qwen-plus-latest": {
@@ -123,7 +131,8 @@
             "top_p": 0.7
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 64,
+            "max_retries": 10
         }
     },
     "dashscope-qwen-turbo-latest": {
@@ -137,7 +146,8 @@
             "top_p": 0.7
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 64,
+            "max_retries": 10
         }
     },
     "dashscope-deepseek-v3-latest": {
@@ -151,7 +161,8 @@
             "top_p": 0.7
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 64,
+            "max_retries": 10
         }
     },
     "dashscope-deepseek-r1-latest": {
@@ -165,7 +176,8 @@
             "top_p": 0.7
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 64,
+            "max_retries": 10
         }
     },
     "zhipuai-glm-4-flash": {
@@ -179,7 +191,8 @@
             "top_p": 0.9
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 128,
+            "max_retries": 10
         }
     },
     "zhipuai-glm-4-plus": {
@@ -193,7 +206,8 @@
             "top_p": 0.9
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 64,
+            "max_retries": 10
         }
     },
     "lingyi-yi-lightning": {
@@ -207,7 +221,8 @@
             "top_p": 0.9
         },
         "request_setting": {
-            "requests_per_minute": 64
+            "requests_per_minute": 64,
+            "max_retries": 10
         }
     }
 }

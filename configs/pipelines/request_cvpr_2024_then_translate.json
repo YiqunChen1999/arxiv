@@ -3,11 +3,12 @@
         "CVFParser",
         "GitHubLinkParser",
         "DefaultKeywordsFilter",
+        "LanguageModelBasedKeywordsFilter",
         "MarkdownTableMaker",
         "DownloadInformationCollector",
-        "ResultSaverByDefaultKeywordsFilter",
+        "ResultSaver",
         "Translator",
-        "ResultSaverByDefaultKeywordsFilter",
+        "ResultSaver",
         "DownloadedPaperIndexGenerator"
     ],
     "configs": {
@@ -17,12 +18,13 @@
             "output_directory": "outputs/CVPR/2024",
             "num_requested": null
         },
-        "ResultSaverByDefaultKeywordsFilter": {
-            "output_directory": "outputs/CVPR/2024",
-            "markdown_directory": "../../Notebook/journal/CVPR/2024"
-        },
         "Translator": {
-            "keywords_filter_plugin": "DefaultKeywordsFilter"
+            "keywords_filter_plugin": "LanguageModelBasedKeywordsFilter"
+        },
+        "ResultSaver": {
+            "output_directory": "outputs/CVPR/2024",
+            "markdown_directory": "../../Notebook/journal/CVPR/2024",
+            "keywords_filter_plugin": "LanguageModelBasedKeywordsFilter"
         },
         "DefaultKeywordsFilter": {
             "keywords": {
