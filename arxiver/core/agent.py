@@ -6,6 +6,7 @@ from time import sleep, time
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor
 
+from tabulate import tabulate
 from openai import OpenAI
 from openai.types.chat.chat_completion import ChatCompletion
 
@@ -81,25 +82,32 @@ class Agent:
                         include_history: bool = False,
                         stream: bool = False,
                         **kwargs) -> str:
-        logger.info(f"Completing by {self.config.model}")
         self.client: OpenAI
         messages = self.history.tolist() if include_history else []
         messages.append({"role": "user", "content": message})
         model_kwarg = self.config.model_kwargs or {}
         model_kwarg.update(kwargs)
-        try:
-            response: ChatCompletion = self.client.chat.completions.create(
-                messages=messages,  # type: ignore # openai handles this
-                model=self.config.model,
-                stream=stream,
-                **model_kwarg,
-            )
-            content = response.choices[0].message.content
-            if not isinstance(content, str):
-                raise ValueError(f"Invalid response content: {content}")
-        except Exception as e:
-            logger.error(f"Failed to complete message: {message}\n{e}")
-            content = ""
+        request_setting = self.config.request_setting or {}
+        content = ""
+        N = request_setting.get("max_retries", 0) + 1
+        for i in range(N):
+            try:
+                response: ChatCompletion = self.client.chat.completions.create(
+                    messages=messages,  # type: ignore # openai handles this
+                    model=self.config.model,
+                    stream=stream,
+                    **model_kwarg,
+                )
+                content = response.choices[0].message.content
+                if not isinstance(content, str):
+                    raise ValueError(f"Invalid response content: {content}")
+                break
+            except Exception as e:
+                logger.error(f"Failed to complete message: {message}\n{e}")
+                content = ""
+                if i < N - 1:
+                    logger.info(f"Retry {i + 1}/{N-1}...")
+                    sleep(5)
         self.history.append(role="user", content=message)
         self.history.append(role="assistant", content=content)
         return content
@@ -124,24 +132,23 @@ class Agent:
             completion_window="24h",
             metadata={"description": f"complete batches by {self.model}"},
         )
+
         while True:
             sleep(30)
             try:
                 job = self.client.batches.retrieve(batch_task.id)
             except Exception as e:
-                logger.warning(
-                    f"Failed to retrieve job {batch_task.id} due to {e}"
-                )
+                logger.warning(f"Failed to retrieve job {batch_task.id}\n{e}")
                 continue
             if job.status in ("validating", "in_progress", "finalizing"):
                 logger.info(f"Completion status: {job.status}")
                 continue
             else:
-                logger.info(
-                    f"Complete batches task exists with status: {job.status}.")
+                logger.info(f"Batches task existed, status: {job.status}.")
                 break
         if job.status not in ("completed",) or not job.output_file_id:
             return []
+
         content = self.client.files.content(job.output_file_id)
         out_jsonl_path = f"tmp/.agent.batch.out.{sha}.jsonl"
         content.write_to_file(out_jsonl_path)
@@ -154,31 +161,11 @@ class Agent:
         # keys = sorted(list(responses.keys()))
         keys = sorted([it["custom_id"] for it in batch_items])
         responses = [responses.get(k, "") for k in keys]
-        try:
-            logger.info(f"Deleting input file {task_file.id}")
-            _ = self.client.files.delete(file_id=task_file.id)
-        except Exception as e:
-            logger.info(f"Failed to delete input file {task_file.id}, {e}")
-        try:
-            logger.info(f"Deleting output file {job.output_file_id}")
-            _ = self.client.files.delete(file_id=job.output_file_id)
-        except Exception as e:
-            logger.info(
-                f"Failed to delete output file {job.output_file_id}, {e}")
-        try:
-            logger.info(f"Deleting local cache file {inp_jsonl_path}")
-            os.remove(inp_jsonl_path)
-        except Exception as e:
-            logger.info(
-                f"Failed to delete local cache file {inp_jsonl_path}\n{e}"
-            )
-        try:
-            logger.info(f"Deleting local cache file {out_jsonl_path}")
-            os.remove(out_jsonl_path)
-        except Exception as e:
-            logger.info(
-                f"Failed to delete local cache file {out_jsonl_path}\n{e}"
-            )
+
+        self.try_delete_server_file(task_file.id)
+        self.try_delete_server_file(job.output_file_id)
+        self.try_delete_local_file(inp_jsonl_path)
+        self.try_delete_local_file(out_jsonl_path)
         return responses
 
     def complete_concurrent(
@@ -206,17 +193,43 @@ class Agent:
             messages[i:i + requests_per_minute]
             for i in range(0, len(messages), requests_per_minute)
         ]
-        for chunk in chunks:
+        for i, chunk in enumerate(chunks):
+            header = [
+                "Model", "Current Chunk", "Total Chunks", "Messages in Chunk",
+                "Messages Processed", "Messages in Total"
+            ]
+            data = [
+                self.config.model, i + 1, len(chunks), len(chunk),
+                len(all_results), len(messages)
+            ]
+            table = tabulate([data], headers=header, tablefmt="pretty")
+            logger.info(f"\n{table}")
             start_time = time()
             all_results.extend(request(chunk))
             sleep_time = 60 - (time() - start_time)
-            if sleep_time > 0:
+            if sleep_time > 0 and i < len(chunks) - 1:
                 logger.info(
                     f"Sleeping for {sleep_time} seconds due to "
                     f"the RPM limitation ({requests_per_minute})..."
                 )
                 sleep(sleep_time)
         return all_results
+
+    def try_delete_server_file(self, file_id: str):
+        try:
+            logger.info(f"Deleting file {file_id}")
+            _ = self.client.files.delete(file_id=file_id)
+        except Exception as e:
+            logger.info(f"Failed to delete file {file_id}, {e}")
+
+    def try_delete_local_file(self, path: str):
+        try:
+            logger.info(f"Deleting local cache file {path}")
+            os.remove(path)
+        except Exception as e:
+            logger.info(
+                f"Failed to delete local cache file {path}\n{e}"
+            )
 
 
 def create_batch_items(messages: list[str], endpoint: str, model: str,

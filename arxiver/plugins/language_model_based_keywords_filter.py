@@ -33,14 +33,14 @@ def default_prompt_template():
         "the provided text;\n"
 
         "- If the paper is related to the interested topic, "
-        "return ""**RESULT: TRUE**;\n"
+        "return <-|RESULT: TRUE|->;\n"
 
         "- If the paper is related to the discarded topic, "
-        "return ""**RESULT: FALSE**, even if the paper is also related to "
+        "return <-|RESULT: FALSE|->, even if the paper is also related to "
         "the interested topic;\n"
 
         "- If the paper does not fall into the interested scope, return "
-        "**RESULT: FALSE**;\n\n"
+        "<-|RESULT: FALSE|->;\n\n"
 
         # Title and Abstract
         "# Task Input\n"
@@ -124,12 +124,22 @@ class LanguageModelBasedKeywordsFilter(BasePlugin):
         logger.info("Processing responses...")
         keywords = list(self.interested_topics.keys())
         for i, r in enumerate(responses):
-            if "**RESULT: TRUE**" in r:
+            if "<-|RESULT: TRUE|->" in r or "<-|RESULT: FALSE|->" not in r:
                 result = results_to_process[i % N]
+                if "<-|RESULT: TRUE|->" not in r:
+                    logger.warning(
+                        f"The model doesn't output valid result, the paper "
+                        f"will be marked as related.\n\n"
+                        f"Model Prompt: {prompts[i]}\n\n"
+                        f"Model Response: {r}\n\n"
+                        f"Model: {self.agent.model}\n"
+                    )
                 plugin: LanguageModelBasedKeywordsFilterData = (
                     result.local_plugin_data[plugin_name()]
                 )
                 plugin.keywords.append(keywords[i // N])
+            elif "<-|RESULT: FALSE|->" in r:
+                pass
         return results
 
     def process_single(
@@ -149,8 +159,16 @@ class LanguageModelBasedKeywordsFilter(BasePlugin):
                 logger.info(
                     f"Processing {i+1}-th of {N} paper of keyword {keyword}..."
                 )
-                response = self.agent.complete_single(prompt)
-                if "**RESULT: TRUE**" in response:
+                r = self.agent.complete_single(prompt)
+                if "<-|RESULT: TRUE|->" in r or "<-|RESULT: FALSE|->" not in r:
+                    if "<-|RESULT: TRUE|->" not in r:
+                        logger.warning(
+                            f"The model doesn't output valid result, "
+                            f"the paper will be marked as related.\n\n"
+                            f"Model Prompt: {prompt}\n\n"
+                            f"Model Response: {r}\n\n"
+                            f"Model: {self.agent.model}\n"
+                        )
                     plugin: LanguageModelBasedKeywordsFilterData = (
                         result.local_plugin_data[plugin_name()]
                     )
