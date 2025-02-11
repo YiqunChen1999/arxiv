@@ -3,11 +3,20 @@
         "ArxivParser",
         "GitHubLinkParser",
         "DefaultKeywordsFilter",
+        "LanguageModelBasedKeywordsFilter",
         "MarkdownTableMaker",
         "DownloadInformationCollector",
-        "ResultSaverByDefaultKeywordsFilter",
-        "TranslatorWithDefaultKeywordsFilter",
-        "ResultSaverByDefaultKeywordsFilter",
+        "ResultSaver",
+        "Translator",
+        "ResultSaver",
         "DownloadedPaperIndexGenerator"
-    ]
+    ],
+    "configs": {
+        "ResultSaver": {
+            "keywords_filter_plugin": "LanguageModelBasedKeywordsFilter"
+        },
+        "Translator": {
+            "keywords_filter_plugin": "LanguageModelBasedKeywordsFilter"
+        }
+    }
 }
