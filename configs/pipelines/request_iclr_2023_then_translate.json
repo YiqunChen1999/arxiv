@@ -1,0 +1,60 @@
+{
+    "plugins": [
+        "OpenReviewParser",
+        "GitHubLinkParser",
+        "DefaultKeywordsFilter",
+        "LanguageModelBasedKeywordsFilter",
+        "MarkdownTableMaker",
+        "DownloadInformationCollector",
+        "ResultSaver",
+        "Translator",
+        "ResultSaver",
+        "DownloadedPaperIndexGenerator"
+    ],
+    "configs": {
+        "OpenReviewParser": {
+            "year": 2023,
+            "conference": "ICLR",
+            "output_directory": "outputs/ICLR/2023",
+            "num_requested": null
+        },
+        "Translator": {
+            "keywords_filter_plugin": "LanguageModelBasedKeywordsFilter"
+        },
+        "ResultSaver": {
+            "output_directory": "outputs/ICLR/2023",
+            "markdown_directory": "../../Notebook/journal/ICLR/2023",
+            "keywords_filter_plugin": "LanguageModelBasedKeywordsFilter"
+        },
+        "DefaultKeywordsFilter": {
+            "keywords": {
+                "detect": ["detect", "detection"],
+                "segment": ["segment", "segmentation"]
+            },
+            "ignorance": {
+                "detect": [
+                    " disease ", " cancer ", " medical ", " polyp ", " lesion ",
+                    " mri ", " tumor ", " lidar ", " remote sens", " audio ", " video ",
+                    " tracking ", " video ", " 3d ", " point cloud", " covid-19 ",
+                    " vehicle", " Bird's Eye View ", " BEV ", " surgery ", " Cardiac ",
+                    " deepfake ", " out-of-distribution ", " toxicity ", " speech ",
+                    " fraud ", " traffic ", " salient object ", " self-driving ",
+                    " emotion ", " anomaly ", " Meningeal ", " Lymphatic ", " Vessel ",
+                    " music ", " clinical ", " economist", " Jailbreak ", " Vessel ",
+                    " Clinical ", " Spatiotemporal ", "Crack Segmentation"
+                ],
+                "segment": [
+                    " disease ", " cancer ", " medical ", " polyp ", " lesion ",
+                    " mri ", " tumor ", " lidar ", " remote sens", " audio ", " video ",
+                    " tracking ", " video ", " 3d ", " point cloud", " covid-19 ",
+                    " vehicle", " Bird's Eye View ", " BEV ", " surgery ", " Cardiac ",
+                    " deepfake ", " out-of-distribution ", " toxicity ", " speech ",
+                    " fraud ", " traffic ", " salient object ", " self-driving ",
+                    " emotion ", " anomaly ", " Meningeal ", " Lymphatic ", " Vessel ",
+                    " music ", " clinical ", " economist", " Jailbreak ", " Vessel ",
+                    " Clinical ", " Spatiotemporal ", "Crack Segmentation"
+                ]
+            }
+        }
+    }
+}
