@@ -260,11 +260,11 @@ if __name__ == "__main__":
         ("Translate the following text into Chinese: "
          "'An apple a day keeps doctors away'.")
     )
-    print(response)
+    logger.info("Response: ", response)
     response = agent.complete_batches(
         [
             ("Translate the following text into Chinese: "
              "'An apple a day keeps doctors away'.")
         ] * 3
     )
-    print(response)
+    logger.info("Response: ", response)
